@@ -1,6 +1,5 @@
 #pragma once
 #include <pcap.h>
-#include "protocol.h"
 
 /* IP Addresss Structure */
 typedef struct ip_addr {

@@ -1,37 +1,8 @@
-#ifdef _MSC_VER
-/*
- * we do not want the warnings about the old deprecated and unsecure CRT functions
- * since these examples can be compiled under *nix as well
- */
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include <pcap.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include "header/pkt_handler.h"
-
-#ifdef _WIN32
-#include <tchar.h>
-
-BOOL LoadNpcapDlls() // Npcap을 설치했는지 확인하는 함수
-{
-	_TCHAR npcap_dir[512];
-	UINT len;
-	len = GetSystemDirectory(npcap_dir, 480);
-	if (!len) {
-		fprintf(stderr, "Error in GetSystemDirectory: %x", GetLastError());
-		return FALSE;
-	}
-	_tcscat_s(npcap_dir, 512, _T("\\Npcap"));
-	if (SetDllDirectory(npcap_dir) == 0) {
-		fprintf(stderr, "Error in SetDllDirectory: %x", GetLastError());
-		return FALSE;
-	}
-	return TRUE;
-}
-#endif
+#include "hdr/pkt_handler.h"
 
 // Prototype of Runnig Mode functions
 int run_offline(pcap_t**, char*);
@@ -39,15 +10,6 @@ int run_live(pcap_t**, char*);
 
 int main()
 {
-#ifdef _WIN32
-	/* Load Npcap and its functions. */
-	if (!LoadNpcapDlls()) // Npcap이 설치되지 않았으면 종료
-	{
-		fprintf(stderr, "Couldn't load Npcap\n");
-		exit(1);
-	}
-#endif
-
 	char errbuf[PCAP_ERRBUF_SIZE];
 	pcap_t* fp = { 0 };
 
@@ -64,7 +26,7 @@ int main()
 		puts("Enter the mode: ");
 
 		rewind(stdin);
-		scanf_s("%d", &Mode, sizeof(int));
+		scanf("%d", &Mode);
 
 		if (Mode < 1 || Mode > 2)
 		{
@@ -81,7 +43,7 @@ int main()
 		int res;
 		int idx = 0;;
 		struct pcap_pkthdr* header = { 0 };
-		u_char* pkt_data = 0;
+		const u_char* pkt_data = 0;
 
 		/* Retrieve the packets */
 		while ((res = pcap_next_ex(fp, &header, &pkt_data)) >= 0) {
@@ -108,11 +70,11 @@ int main()
 
 int run_offline(pcap_t** fp, char* errbuf)
 {
-	char pcap_file_path[MAX_PATH + _MAX_FNAME];
+	char pcap_file_path[FILENAME_MAX];
 
 	printf("Enter pcap file path: ");
 	rewind(stdin);
-	scanf_s("%s", pcap_file_path, MAX_PATH + _MAX_FNAME);
+	scanf("%s", pcap_file_path);
 
 	/* Open the capture file */
 	if ((*fp = pcap_open_offline(pcap_file_path, errbuf)) == NULL)
@@ -130,15 +92,13 @@ int run_live(pcap_t** fp, char* errbuf)
 	int inum;
 	int i = 0;
 
-	/* Retrieve the device list */
-	if (pcap_findalldevs(&alldevs, errbuf) == -1) // Device 확인
+	if (pcap_findalldevs(&alldevs, errbuf) == -1)
 	{
 		printf("Error in pcap_findalldevs: %s\n", errbuf);
-		return 0;
+		return -1;
 	}
 
-	/* Print the list */
-	for (d = alldevs; d; d = d->next) // Device list 나열
+	for (d = alldevs; d; d = d->next)
 	{
 		printf("%d. %s", ++i, d->name);
 		if (d->description)
@@ -155,21 +115,17 @@ int run_live(pcap_t** fp, char* errbuf)
 
 	printf("Enter the interface number (1-%d): ", i);
 	rewind(stdin);
-	scanf_s("%d", &inum, sizeof(int));
+	scanf("%d", &inum);
 
 	if (inum < 1 || inum > i)
 	{
 		printf("\nInterface number out of range.\n");
-		/* Free the device list */
 		pcap_freealldevs(alldevs);
-		return 0;
+		return -1;
 	}
 
-	/* Jump to the selected adapter */
 	for (d = alldevs, i = 0; i < inum - 1; d = d->next, i++);
 
-	/* Open the device */
-	/* Open the adapter */
 	if ((*fp = pcap_open_live(d->name,					// name of the device
 							65536,						// portion of the packet to capture. 
 														// 65536 grants that the whole packet will be captured on all the MACs.
@@ -179,14 +135,13 @@ int run_live(pcap_t** fp, char* errbuf)
 						)) == NULL)
 	{
 		printf("\nUnable to open the adapter. %s is not supported by Npcap\n", d->name);
-		/* Free the device list */
 		pcap_freealldevs(alldevs);
-		return 0;
+		return -1;
 	}
 
 	printf("\nlistening on %s...\n", d->description);
 
-	/* At this point, we don't need any more the device list. Free it */
 	pcap_freealldevs(alldevs);
-	return 1;
+
+	return 0;
 }
