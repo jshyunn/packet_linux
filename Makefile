@@ -1,9 +1,12 @@
 CC=gcc
-OBJS=main.o pkt_handler.o
+C_SRC=$(wildcard *.c)
+OBJS=$(C_SRC:.c=.o)
+CFLAGS=-I ./hdr -I ./src
+LDFLAGS=-lpcap
 TARGET=main.out
 
 $(TARGET):$(OBJS)
-	$(CC) -o $@ $^ -lpcap
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
 	rm -f $(OBJS)
