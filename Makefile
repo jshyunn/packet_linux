@@ -1,14 +1,15 @@
 CC=gcc
-C_SRC=$(wildcard *.c)
-OBJS=$(C_SRC:.c=.o)
-CFLAGS=-I ./hdr -I ./src
+OBJS=main.o ./src/pkt_handler.o
 LDFLAGS=-lpcap
 TARGET=main.out
 
 $(TARGET):$(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+main.o:./hdr/pkt_handler.h
+./src/pkt_handler.o:./hdr/pkt_handler.h
 
 clean:
 	rm -f $(OBJS)
-
+	rm -f $(TARGET)
 
