@@ -1,6 +1,5 @@
 #pragma once
 
-#include "protocol.h"
 #include "pkt_handler.h"
 
 /* Console */
@@ -12,3 +11,9 @@ void printArp(const arp_header*);
 void printIcmp(const icmp_header*);
 void printTcp(const tcp_header*);
 void printUdp(const udp_header*);
+
+// Prototype of Runnig Mode functions
+int runOffline(pcap_t**, char*);
+int runLive(pcap_t**, char*);
+int runExit();
+int run();

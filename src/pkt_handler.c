@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "../hdr/pkt_handler.h"
+#include "../hdr/pkt_io.h"
 
 Statistics stat = { 0 };
 
@@ -9,14 +10,17 @@ void handleFrame(const struct pcap_pkthdr* pkt_hdr, const u_char* pkt_data)
 	double now = (double)pkt_hdr->ts.tv_sec + (double)pkt_hdr->ts.tv_usec / 1000000;
 	if (now - stat.prev_t > 1)
 	{
+		printStatistics(stat);
 		memset(&stat, 0, sizeof(stat));
 		stat.prev_t = now;
 	}
 	stat.byte += (pkt_hdr->caplen * 8);
 	stat.pkt++;
+	printFrame(pkt_hdr);
 
 	ether_header* ether_hdr = (ether_header*)pkt_data;
 	ether_hdr->type = ntohs(ether_hdr->type);
+	printEther(ether_hdr);
 	handleEther(ether_hdr);
 }
 
@@ -32,6 +36,7 @@ void handleEther(const ether_header* ether_hdr)
 			ip_hdr->id = ntohs(ip_hdr->id);
 			ip_hdr->off = ntohs(ip_hdr->off);
 			ip_hdr->checksum = ntohs(ip_hdr->checksum);
+			printIp(ip_hdr);
 			handleIp(ip_hdr);
 			break;
 		}
@@ -41,6 +46,7 @@ void handleEther(const ether_header* ether_hdr)
 			arp_hdr->hard = ntohs(arp_hdr->hard);
 			arp_hdr->pro = ntohs(arp_hdr->pro);
 			arp_hdr->op = ntohs(arp_hdr->op);
+			printArp(arp_hdr);
 			break;
 		}
 	}
@@ -55,7 +61,9 @@ void handleIp(const ip_header* ip_hdr)
 		{
 			icmp_header* icmp_hdr = (icmp_header*)(ip_hdr + 1);
 			icmp_hdr->checksum = ntohs(icmp_hdr->checksum);
+			printIcmp(icmp_hdr);
 			stat.icmp += 1;
+
 			break;
 		}
 		case TCP:
@@ -69,7 +77,9 @@ void handleIp(const ip_header* ip_hdr)
 			tcp_hdr->win_size = (int)ntohs(tcp_hdr->win_size);
 			tcp_hdr->checksum = ntohs(tcp_hdr->checksum);
 			tcp_hdr->urgent_ptr = ntohs(tcp_hdr->urgent_ptr);
+			printTcp(tcp_hdr);
 			stat.tcp += 1;
+
 			break;
 		}
 		case UDP:
@@ -79,9 +89,10 @@ void handleIp(const ip_header* ip_hdr)
 			udp_hdr->dport = (int)ntohs(udp_hdr->dport);
 			udp_hdr->tlen = (int)ntohs(udp_hdr->tlen);
 			udp_hdr->checksum = ntohs(udp_hdr->checksum);
+			printUdp(udp_hdr);
 			stat.udp += 1;
+
 			break;
 		}
 	}
 }
-
