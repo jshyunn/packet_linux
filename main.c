@@ -8,7 +8,6 @@ int main()
 {
 	while (1)
 	{
-		int res;
-		if ((res = run()) == 0) break;
+		if (run() == 0) break;
 	}
 }

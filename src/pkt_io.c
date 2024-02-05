@@ -2,6 +2,149 @@
 #include <string.h>
 #include "../hdr/pkt_io.h"
 
+
+int run()
+{
+	int mode;
+	pcap_t* fp;
+	char errbuf[PCAP_ERRBUF_SIZE];
+
+	printf("\n====================== Intrusion Detection Tool ======================\n"
+		"[1] Offline\n[2] Live\n[3] Exit\n"
+		"Enter the mode: ");
+
+	scanf("%d", &mode);
+	fflush(stdin);
+	
+	switch (mode)
+	{
+		case Offline:
+		{
+			if (runOffline(&fp, errbuf) == -1)
+				return -1;
+			break;
+		}
+		case Live:
+		{
+			if (runLive(&fp, errbuf) == -1)
+				return -1;
+			break;
+		}
+		case Exit:
+		{
+			return 0;
+		}
+		default:
+		{
+			fprintf(stderr, "Error: Invalid mode number %d\n", (int)mode);
+			return -1;
+		}
+	}
+		
+	int res;
+	int idx = 0;;
+	struct pcap_pkthdr* header = { 0 };
+	const u_char* pkt_data = 0;
+
+	while ((res = pcap_next_ex(fp, &header, &pkt_data)) >= 0) {
+			
+		if (res == 0)
+			continue;
+
+		if (header->len < 14) continue;
+
+		idx += 1;
+		printf("\nNo: %d", idx);
+		handleFrame(header, pkt_data);
+	}
+	pcap_close(fp);
+
+	if (res == -1) {
+		fprintf(stderr, "Error: %s\n", pcap_geterr(fp));
+		return -1;
+	}
+	return 0;
+}
+
+int runOffline(pcap_t** fp, char* errbuf)
+{
+	char pcap_file_path[FILENAME_MAX];
+
+	printf("Enter pcap file path: ");
+	scanf("%s", pcap_file_path);
+	fflush(stdin);
+
+	/* Open the capture file */
+	if ((*fp = pcap_open_offline(pcap_file_path, errbuf)) == NULL)
+	{
+		fprintf(stderr, "Error: %s\n", errbuf);
+		return -1;
+	}
+	return 0;
+}
+
+int runLive(pcap_t** fp, char* errbuf)
+{
+	pcap_if_t* alldevs;
+	pcap_if_t* d;
+	int inum;
+	int i = 0;
+
+	if (pcap_findalldevs(&alldevs, errbuf) == -1)
+	{
+		fprintf(stderr, "Error: %s\n", errbuf);
+		return -1;
+	}
+
+	for (d = alldevs; d; d = d->next)
+	{
+		printf("%d. %s", ++i, d->name);
+		if (d->description)
+			printf(" (%s)\n", d->description);
+		else
+			printf(" (No description available)\n");
+	}
+
+	if (i == 0)
+	{
+		printf("\nNo interfaces found! Make sure Npcap is installed.\n");
+		return 0;
+	}
+
+	printf("Enter the interface number (1-%d): ", i);
+	scanf("%d", &inum);
+	fflush(stdin);
+
+	if (inum < 1 || inum > i)
+	{
+		fprintf(stderr, "\nError: Interface number out of range.\n");
+		pcap_freealldevs(alldevs);
+		return -1;
+	}
+
+	for (d = alldevs, i = 0; i < inum - 1; d = d->next, i++);
+
+	if ((*fp = pcap_open_live(d->name,					// name of the device
+							65536,						// portion of the packet to capture. 
+														// 65536 grants that the whole packet will be captured on all the MACs.
+							PCAP_OPENFLAG_PROMISCUOUS,	// promiscuous mode (nonzero means promiscuous)
+							1000,						// read timeout
+							errbuf						// error buffer
+						)) == NULL)
+	{
+		fprintf(stderr, "\nError: Unable to open the adapter. %s is not supported by Npcap\n", d->name);
+		pcap_freealldevs(alldevs);
+		return -1;
+	}
+
+	printf("\nlistening on %s...\n", d->description);
+
+	pcap_freealldevs(alldevs);
+
+	return 0;
+}
+
+
 void printStatistics(const Statistics stat)
 {
 	if (stat.prev_t == 0) return;
@@ -125,141 +268,4 @@ void printUdp(const udp_header* udp_hdr)
 	printf("SRC Port: %d -> DST Port: %d\n", ntohs(udp_hdr->sport), ntohs(udp_hdr->dport));
 	printf("Total Length: %d\n", ntohs(udp_hdr->tlen));
 	printf("Checksum: 0x%04x\n", ntohs(udp_hdr->checksum));
-}
-
-
-int runOffline(pcap_t** fp, char* errbuf)
-{
-	char pcap_file_path[FILENAME_MAX];
-
-	printf("Enter pcap file path: ");
-	scanf("%s", pcap_file_path);
-	fflush(stdin);
-
-	/* Open the capture file */
-	if ((*fp = pcap_open_offline(pcap_file_path, errbuf)) == NULL)
-	{
-		//printf("\nUnable to open the file: %s.\n", pcap_file_path);
-		return -1;
-	}
-	return 0;
-}
-
-int runLive(pcap_t** fp, char* errbuf)
-{
-	pcap_if_t* alldevs;
-	pcap_if_t* d;
-	int inum;
-	int i = 0;
-
-	if (pcap_findalldevs(&alldevs, errbuf) == -1)
-	{
-		printf("Error in pcap_findalldevs: %s\n", errbuf);
-		return -1;
-	}
-
-	for (d = alldevs; d; d = d->next)
-	{
-		printf("%d. %s", ++i, d->name);
-		if (d->description)
-			printf(" (%s)\n", d->description);
-		else
-			printf(" (No description available)\n");
-	}
-
-	if (i == 0)
-	{
-		printf("\nNo interfaces found! Make sure Npcap is installed.\n");
-		return 0;
-	}
-
-	printf("Enter the interface number (1-%d): ", i);
-	scanf("%d", &inum);
-	fflush(stdin);
-
-	if (inum < 1 || inum > i)
-	{
-		printf("\nInterface number out of range.\n");
-		pcap_freealldevs(alldevs);
-		return -1;
-	}
-
-	for (d = alldevs, i = 0; i < inum - 1; d = d->next, i++);
-
-	if ((*fp = pcap_open_live(d->name,					// name of the device
-							65536,						// portion of the packet to capture. 
-														// 65536 grants that the whole packet will be captured on all the MACs.
-							PCAP_OPENFLAG_PROMISCUOUS,	// promiscuous mode (nonzero means promiscuous)
-							1000,						// read timeout
-							errbuf						// error buffer
-						)) == NULL)
-	{
-		printf("\nUnable to open the adapter. %s is not supported by Npcap\n", d->name);
-		pcap_freealldevs(alldevs);
-		return -1;
-	}
-
-	printf("\nlistening on %s...\n", d->description);
-
-	pcap_freealldevs(alldevs);
-
-	return 0;
-}
-
-int run()
-{
-	char errbuf[PCAP_ERRBUF_SIZE];
-	pcap_t* fp;
-	int mode = 0;
-	int (*run_type[2])(pcap_t**, char*) = {
-		runOffline,
-		runLive
-	};
-
-	puts("\n====================== Intrusion Detection Tool ======================\n");
-	puts("[1] Offline\n[2] Live\n[3] Exit\n");
-	puts("Enter the mode: ");
-
-	scanf("%d", &mode);
-	fflush(stdin);
-
-	if (mode < 1 || mode > 3)
-	{
-		fprintf(stderr, "Error: invalid number: %d\n", mode);
-		return -1;
-	}
-
-	if (mode == 3) return 0;
-
-	if (run_type[mode - 1](&fp, errbuf) == -1)
-	{
-		fprintf(stderr, "\nError: %s.\n", errbuf);
-		return -1;
-	}
-		
-	int res;
-	int idx = 0;;
-	struct pcap_pkthdr* header = { 0 };
-	const u_char* pkt_data = 0;
-
-	/* Retrieve the packets */
-	while ((res = pcap_next_ex(fp, &header, &pkt_data)) >= 0) {
-			
-		if (res == 0)
-			/* Timeout elapsed */
-			continue;
-
-		if (header->len < 14) continue;
-
-		idx += 1;
-		printf("\nNo: %d", idx);
-		handleFrame(header, pkt_data);
-	}
-	pcap_close(fp);
-
-	if (res == -1) {
-		fprintf(stderr, "Error: reading the packets: %s\n", pcap_geterr(fp));
-		return -1;
-	}
-	return 0;
 }
