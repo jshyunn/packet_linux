@@ -2,17 +2,11 @@
 
 #include "pkt_handler.h"
 
-typedef enum Mode {
-	Offline=1,
-	Live,
-	Exit
-} Mode;
-
-// Prototype of Runnig Mode functions
-int runOffline(pcap_t**, char*);
-int runLive(pcap_t**, char*);
-int runExit();
-int run();
+/* Prototype of Runnig Mode functions */
+int setLive(pcap_t**);
+int setOffline(pcap_t**, char*);
+int parsePkt(pcap_t **);
+int stop();
 
 /* Console */
 void printStatistics(const Statistics);

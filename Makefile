@@ -1,6 +1,6 @@
 CC=gcc
 OBJS=main.o ./src/pkt_io.o ./src/pkt_handler.o
-LDFLAGS=-lpcap
+LDFLAGS=-lpcap -lpthread
 TARGET=main.out
 
 $(TARGET):$(OBJS)

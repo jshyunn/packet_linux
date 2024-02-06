@@ -1,90 +1,11 @@
 #include <time.h>
 #include <string.h>
+#include <pcap.h>
 #include "../hdr/pkt_io.h"
 
-
-int run()
+int setLive(pcap_t** fp)
 {
-	int mode;
-	pcap_t* fp;
 	char errbuf[PCAP_ERRBUF_SIZE];
-
-	printf("\n====================== Intrusion Detection Tool ======================\n"
-		"[1] Offline\n[2] Live\n[3] Exit\n"
-		"Enter the mode: ");
-
-	scanf("%d", &mode);
-	fflush(stdin);
-	
-	switch (mode)
-	{
-		case Offline:
-		{
-			if (runOffline(&fp, errbuf) == -1)
-				return -1;
-			break;
-		}
-		case Live:
-		{
-			if (runLive(&fp, errbuf) == -1)
-				return -1;
-			break;
-		}
-		case Exit:
-		{
-			return 0;
-		}
-		default:
-		{
-			fprintf(stderr, "Error: Invalid mode number %d\n", (int)mode);
-			return -1;
-		}
-	}
-		
-	int res;
-	int idx = 0;;
-	struct pcap_pkthdr* header = { 0 };
-	const u_char* pkt_data = 0;
-
-	while ((res = pcap_next_ex(fp, &header, &pkt_data)) >= 0) {
-			
-		if (res == 0)
-			continue;
-
-		if (header->len < 14) continue;
-
-		idx += 1;
-		printf("\nNo: %d", idx);
-		handleFrame(header, pkt_data);
-	}
-	pcap_close(fp);
-
-	if (res == -1) {
-		fprintf(stderr, "Error: %s\n", pcap_geterr(fp));
-		return -1;
-	}
-	return 0;
-}
-
-int runOffline(pcap_t** fp, char* errbuf)
-{
-	char pcap_file_path[FILENAME_MAX];
-
-	printf("Enter pcap file path: ");
-	scanf("%s", pcap_file_path);
-	fflush(stdin);
-
-	/* Open the capture file */
-	if ((*fp = pcap_open_offline(pcap_file_path, errbuf)) == NULL)
-	{
-		fprintf(stderr, "Error: %s\n", errbuf);
-		return -1;
-	}
-	return 0;
-}
-
-int runLive(pcap_t** fp, char* errbuf)
-{
 	pcap_if_t* alldevs;
 	pcap_if_t* d;
 	int inum;
@@ -142,6 +63,50 @@ int runLive(pcap_t** fp, char* errbuf)
 	pcap_freealldevs(alldevs);
 
 	return 0;
+}
+
+int setOffline(pcap_t** fp, char* filepath)
+{
+	char errbuf[PCAP_ERRBUF_SIZE];
+
+	if ((*fp = pcap_open_offline(filepath, errbuf)) == NULL)
+	{
+		fprintf(stderr, "Error: %s\n", errbuf);
+		return -1;
+	}
+	return 0;
+}
+
+int parsePkt(pcap_t** fp)
+{
+	int res;
+	int idx = 0;
+	struct pcap_pkthdr* header;
+	const u_char* pkt_data;
+
+	while ((res = pcap_next_ex(*fp, &header, &pkt_data)) >= 0) {
+		if (res == 0)
+			continue;
+
+		if (header->len < 14) continue;
+
+		idx += 1;
+		printf("\nNo: %d", idx);
+		handleFrame(header, pkt_data);
+	}
+	
+	if (res == -1) {
+		fprintf(stderr, "Error: %s\n", pcap_geterr(*fp));
+		return -1;
+	}
+
+	pcap_close(*fp);
+	return 0;
+}
+
+int stop()
+{
+
 }
 
 
