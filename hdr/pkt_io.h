@@ -5,11 +5,9 @@
 /* Prototype of Runnig Mode functions */
 int setLive(pcap_t**);
 int setOffline(pcap_t**, char*);
-int parsePkt(pcap_t **);
-int stop();
+int processPkt(pcap_t **);
 
 /* Console */
-void printStatistics(const Statistics);
 void printFrame(const struct pcap_pkthdr*);
 void printEther(const ether_header*);
 void printIp(const ip_header*);

@@ -1,6 +1,8 @@
+#include <stdio.h>
 #include <time.h>
 #include <string.h>
 #include <pcap.h>
+#include <pthread.h>
 #include "../hdr/pkt_io.h"
 
 int setLive(pcap_t** fp)
@@ -77,12 +79,14 @@ int setOffline(pcap_t** fp, char* filepath)
 	return 0;
 }
 
-int parsePkt(pcap_t** fp)
+int processPkt(pcap_t** fp)
 {
 	int res;
-	int idx = 0;
+	int idx = 0, cnt = 0;
 	struct pcap_pkthdr* header;
 	const u_char* pkt_data;
+	double now_sec, prev_sec = 0, bytes = 0;
+	pthread_t p_thread;
 
 	while ((res = pcap_next_ex(*fp, &header, &pkt_data)) >= 0) {
 		if (res == 0)
@@ -90,8 +94,17 @@ int parsePkt(pcap_t** fp)
 
 		if (header->len < 14) continue;
 
-		idx += 1;
-		printf("\nNo: %d", idx);
+		now_sec = (double)header->ts.tv_sec + (double)header->ts.tv_usec / 1000000;
+		if (now_sec - prev_sec > 1)
+		{
+			cnt = 0;
+			bytes = 0;
+			prev_sec = now_sec;
+		}
+		idx++;
+		cnt++;
+		bytes += header->caplen;
+		printf("\nNo: %d\tPps: %d\tBps: %f MB/s", idx, cnt, bytes / 1000);
 		handleFrame(header, pkt_data);
 	}
 	
@@ -102,19 +115,6 @@ int parsePkt(pcap_t** fp)
 
 	pcap_close(*fp);
 	return 0;
-}
-
-int stop()
-{
-
-}
-
-
-void printStatistics(const Statistics stat)
-{
-	if (stat.prev_t == 0) return;
-	printf("\n============================ Statistics ==============================\n");
-	printf("Bps: %d, Pps: %d", stat.byte, stat.pkt);
 }
 
 void printFrame(const struct pcap_pkthdr* pkt_hdr)

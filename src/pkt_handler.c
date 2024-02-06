@@ -7,15 +7,6 @@ Statistics stat = { 0 };
 
 void handleFrame(const struct pcap_pkthdr* pkt_hdr, const u_char* pkt_data)
 {
-	double now = (double)pkt_hdr->ts.tv_sec + (double)pkt_hdr->ts.tv_usec / 1000000;
-	if (now - stat.prev_t > 1)
-	{
-		printStatistics(stat);
-		memset(&stat, 0, sizeof(stat));
-		stat.prev_t = now;
-	}
-	stat.byte += (pkt_hdr->caplen * 8);
-	stat.pkt++;
 	printFrame(pkt_hdr);
 
 	ether_header* ether_hdr = (ether_header*)pkt_data;

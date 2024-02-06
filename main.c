@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <pthread.h>
 #include <unistd.h>
 #include "hdr/pkt_io.h"
 /*
@@ -32,7 +31,6 @@ int main(int argc, char* argv[])
 	}
 
 	if ((opt = getopt(argc, argv, "lo:")) != -1) {
-		printf("%c\n", opt);
 		switch (opt)
 		{
 			case 'l':
@@ -55,5 +53,5 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	parsePkt(&fp);
+	processPkt(&fp);
 }
