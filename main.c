@@ -13,9 +13,10 @@
 
 void printUsage(char* command)
 {
-	printf("Usage: %s [OPTION] [ARGS]\n"
-	"\t\t[ -l live ]\n"
-	"\t\t[ -o offline ] [FILEPATH]\n", 
+	printf("Usage: %s [OPTION]\n"
+	"\t\t[ -l ]\n"
+	"\t\t[ -o file ]\n"
+        "\t\t[ -v ]\n",	
 	command);
 }
 
@@ -30,7 +31,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	if ((opt = getopt(argc, argv, "lo:")) != -1) {
+	while ((opt = getopt(argc, argv, "lo:v")) != -1) {
 		switch (opt)
 		{
 			case 'l':
@@ -45,6 +46,11 @@ int main(int argc, char* argv[])
 					return -1;
 				break;
 			}
+			case 'v':
+			{
+				//setVerbose
+				//break;
+			}
 			default:
 			{
 				printUsage(argv[0]);
@@ -52,6 +58,5 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
-
 	processPkt(&fp);
 }
