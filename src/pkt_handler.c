@@ -3,7 +3,7 @@
 #include "../hdr/pkt_handler.h"
 #include "../hdr/pkt_io.h"
 
-Statistics stat = { 0 };
+/*Statistics stat = { 0 };
 
 void handleFrame(const struct pcap_pkthdr* pkt_hdr, const u_char* pkt_data)
 {
@@ -86,4 +86,4 @@ void handleIp(const ip_header* ip_hdr)
 			break;
 		}
 	}
-}
+}*/

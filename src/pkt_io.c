@@ -2,8 +2,11 @@
 #include <time.h>
 #include <string.h>
 #include <pcap.h>
-#include <pthread.h>
+#include <malloc.h>
 #include "../hdr/pkt_io.h"
+#include "../hdr/pkt_handler.h"
+
+#define TO_LITTLE(data) data = ntohs(data);
 
 int setLive(pcap_t** fp)
 {
@@ -79,131 +82,128 @@ int setOffline(pcap_t** fp, char* filepath)
 	return 0;
 }
 
-int processPkt(pcap_t** fp)
+int printStatistics(const struct pcap_pkthdr* header)
 {
-	int res;
+	double now_sec = 0, prev_sec = 0, bytes = 0;
 	int idx = 0, cnt = 0;
-	struct pcap_pkthdr* header;
-	const u_char* pkt_data;
-	double now_sec, prev_sec = 0, bytes = 0;
-	pthread_t p_thread;
 
-	while ((res = pcap_next_ex(*fp, &header, &pkt_data)) >= 0) {
-		if (res == 0)
-			continue;
-
-		if (header->len < 14) continue;
-
-		now_sec = (double)header->ts.tv_sec + (double)header->ts.tv_usec / 1000000;
-		if (now_sec - prev_sec > 1)
-		{
-			cnt = 0;
-			bytes = 0;
-			prev_sec = now_sec;
-		}
-		idx++;
-		cnt++;
-		bytes += header->caplen;
-		printf("\nNo: %d\tPps: %d\tBps: %f MB/s", idx, cnt, bytes / 1000);
-		handleFrame(header, pkt_data);
+	now_sec = (double)header->ts.tv_sec + (double)header->ts.tv_usec / 1000000;
+	if (now_sec - prev_sec > 1)
+	{
+		cnt = 0;
+		bytes = 0;
+		prev_sec = now_sec;
 	}
-	
-	if (res == -1) {
-		fprintf(stderr, "Error: %s\n", pcap_geterr(*fp));
-		return -1;
-	}
-
-	pcap_close(*fp);
-	return 0;
+	idx++;
+	cnt++;
+	bytes += header->caplen;
+	printf("\nNo: %d\tPps: %d\tBps: %f MB/s", idx, cnt, bytes / 1000);
 }
 
-void printFrame(const struct pcap_pkthdr* pkt_hdr)
+int processPkt(const struct pcap_pkthdr* pkt_hdr, const u_char* pkt_data)
+{
+	struct ether_header* ether_hdr = (struct ether_header*)pkt_data;
+	TO_LITTLE(ether_hdr->ether_type);
+	printEther(ether_hdr);
+	switch (ether_hdr->ether_type)
+	{
+		case ETHERTYPE_IP:
+		{
+			struct ip* ip_hdr = (struct ip*)(ether_hdr + 1);
+			printIp(ip_hdr);
+		}
+		case ETHERTYPE_ARP:
+		{
+			struct ether_arp* arp_hdr = (struct ether_arp*)(ether_hdr + 1);
+			//printArp(arp_hdr);
+		}
+	}
+}
+
+/*void printFrame(const struct pcap_pkthdr* pkt_hdr)
 {
 	struct tm* ltime;
 	char timesec[9];
 	time_t local_tv_sec;
 
-	/* convert the timestamp to readable format */
 	local_tv_sec = pkt_hdr->ts.tv_sec;
 	ltime = localtime(&local_tv_sec);
 	strftime(timesec, sizeof timesec, "%H:%M:%S", ltime);
 	printf("\n=============================== Frame ================================\n");
 	printf("Time: %s.%ld Frame Length: %d Capture Length: %d\n", timesec, pkt_hdr->ts.tv_usec, pkt_hdr->caplen, pkt_hdr->len);
-}
+}*/
 
-void printEther(const ether_header* ether_hdr)
+void printEther(const struct ether_header* ether_hdr)
 {
-	ether_type type = ether_hdr->type;
-	char typestr[10] = "";
-	switch (type)
+	char typestr[10];
+	switch (ether_hdr->ether_type)
 	{
-	case IPv4:
+	case ETHERTYPE_IP:
 		strcpy(typestr, "IPv4");
 		break;
-	case ARP:
+	case ETHERTYPE_ARP:
 		strcpy(typestr, "ARP");
 		break;
-	case RARP:
+	case ETHERTYPE_REVARP:
 		strcpy(typestr, "RARP");
 		break;
-	case IPv6:
+	case ETHERTYPE_IPV6:
 		strcpy(typestr, "IPv6");
 		break;
 	}
 	printf("============================== Ethernet ==============================\n");
 	printf("SRC MAC: %02x:%02x:%02x:%02x:%02x:%02x -> DST MAC: %02x:%02x:%02x:%02x:%02x:%02x Type: 0x%04x(%s)\n",
-		ether_hdr->src.byte1, ether_hdr->src.byte2, ether_hdr->src.byte3, ether_hdr->src.byte4, ether_hdr->src.byte5, ether_hdr->src.byte6,
-		ether_hdr->dst.byte1, ether_hdr->dst.byte2, ether_hdr->dst.byte3, ether_hdr->dst.byte4, ether_hdr->dst.byte5, ether_hdr->dst.byte6,
-		type, typestr);
+		ether_hdr->ether_dhost[0], ether_hdr->ether_dhost[1], ether_hdr->ether_dhost[2], ether_hdr->ether_dhost[3], ether_hdr->ether_dhost[4], ether_hdr->ether_dhost[5],
+		ether_hdr->ether_shost[0], ether_hdr->ether_shost[1], ether_hdr->ether_shost[2], ether_hdr->ether_shost[3], ether_hdr->ether_shost[4], ether_hdr->ether_shost[5],
+		ether_hdr->ether_type, typestr);
 }
 
-void printIp(const ip_header* ip_hdr)
+void printIp(const struct ip* ip_hdr)
 {
-	ip_type type = ip_hdr->pro;
-	char typestr[10] = "";
-	switch (type)
+	char typestr[10];
+	switch (ip_hdr->ip_p)
 	{
-	case ICMP:
+	case IPPROTO_ICMP:
 		strcpy(typestr, "ICMP");
 		break;
-	case TCP:
-		strcpy(typestr, "TCP");
+	case IPPROTO_TCP:
+		strcpy(typestr, "TCP");	
 		break;
-	case UDP:
+	case IPPROTO_UDP:
 		strcpy(typestr, "UDP");
 		break;
 	}
 	
 	printf("=============================== IPv4 =================================\n");
-	printf("Version: %d\n", (int)(ip_hdr->ver_ihl & 0xf0) / 16);
-	printf("Internet Header Length: %d\n", (int)(ip_hdr->ver_ihl & 0x0f) * 4);
-	printf("Type of Service: 0x%02x\n", ip_hdr->tos);
-	printf("Total Length: %d\n", ip_hdr->tlen);
-	printf("Fragment Identification: 0x%04x\n", ip_hdr->id);
-	printf("Fragmentation Flags & Offset: %x\n", ip_hdr->off);
-	printf("Time to Live: %d\n", ip_hdr->ttl);
-	printf("Protocol: %d(%s)\n", type, typestr);
-	printf("Header Checksum : 0x%04x\n", ip_hdr->checksum);
-	printf("SRC IP: %d.%d.%d.%d -> DST IP: %d.%d.%d.%d\n",
-		ip_hdr->src.byte1, ip_hdr->src.byte2, ip_hdr->src.byte3, ip_hdr->src.byte4,
-		ip_hdr->dst.byte1, ip_hdr->dst.byte2, ip_hdr->dst.byte3, ip_hdr->dst.byte4);
+	printf("Version: %d\n", ip_hdr->ip_v);
+	printf("Internet Header Length: %d\n", ip_hdr->ip_hl * 4);
+	printf("Type of Service: 0x%02x\n", ip_hdr->ip_tos);
+	printf("Total Length: %d\n", ntohs(ip_hdr->ip_len));
+	printf("Fragment Identification: 0x%04x\n", ip_hdr->ip_id);
+	printf("Fragmentation Flags & Offset: %x\n", ip_hdr->ip_off);
+	printf("Time to Live: %d\n", ip_hdr->ip_ttl);
+	printf("Protocol: %d(%s)\n", ip_hdr->ip_p, typestr);
+	printf("Header Checksum : 0x%04x\n", ip_hdr->ip_sum);
+	/*printf("SRC IP: %d.%d.%d.%d -> DST IP: %d.%d.%d.%d\n",
+		ip_hdr->ip_src.s_addr, ip_hdr->ip_src.s_addr, ip_hdr->ip_src.s_addr, ip_hdr->ip_src.s_addr,
+		ip_hdr->ip_dst.s_addr, ip_hdr->ip_dst.s_addr, ip_hdr->ip_dst.s_addr, ip_hdr->ip_dst.s_addr);*/
 }
 
-void printArp(const arp_header* arp_data)
+/*void printArp(const ether_arp* arp_hdr)
 {
 	printf("================================ ARP =================================\n");
-	printf("Hardware Type: 0x%04x\n", arp_data->hard);
-	printf("Protocol Type: 0x%04x\n", arp_data->pro);
-	printf("Hardware Size: %d\n", arp_data->hlen);
-	printf("Protocol Size: %d\n", arp_data->plen);
-	printf("Opcode: 0x%04x\n", arp_data->op);
+	printf("Hardware Type: 0x%04x\n", arp_hdr->hard);
+	printf("Protocol Type: 0x%04x\n", arp_hdr->pro);
+	printf("Hardware Size: %d\n", arp_hdr->hlen);
+	printf("Protocol Size: %d\n", arp_hdr->plen);
+	printf("Opcode: 0x%04x\n", arp_hdr->op);
 	printf("Sender MAC Address: %02x:%02x:%02x:%02x:%02x:%02x\n",
-		arp_data->sha.byte1, arp_data->sha.byte2, arp_data->sha.byte3, arp_data->sha.byte4, arp_data->sha.byte5, arp_data->sha.byte6);
-	printf("Sender IP Address: %d.%d.%d.%d\n", arp_data->spa.byte1, arp_data->spa.byte2, arp_data->spa.byte3, arp_data->spa.byte4);
+		arp_hdr->sha.byte1, arp_hdr->sha.byte2, arp_hdr->sha.byte3, arp_hdr->sha.byte4, arp_hdr->sha.byte5, arp_hdr->sha.byte6);
+	printf("Sender IP Address: %d.%d.%d.%d\n", arp_hdr->spa.byte1, arp_hdr->spa.byte2, arp_hdr->spa.byte3, arp_hdr->spa.byte4);
 	printf("Target MAC Address: %02x:%02x:%02x:%02x:%02x:%02x\n",
-		arp_data->dha.byte1, arp_data->dha.byte2, arp_data->dha.byte3, arp_data->dha.byte4, arp_data->dha.byte5, arp_data->dha.byte6);
-	printf("Target IP Address: %d.%d.%d.%d\n", arp_data->dpa.byte1, arp_data->dpa.byte2, arp_data->dpa.byte3, arp_data->dpa.byte4);
-}
+		arp_hdr->dha.byte1, arp_hdr->dha.byte2, arp_hdr->dha.byte3, arp_hdr->dha.byte4, arp_hdr->dha.byte5, arp_hdr->dha.byte6);
+	printf("Target IP Address: %d.%d.%d.%d\n", arp_hdr->dpa.byte1, arp_hdr->dpa.byte2, arp_hdr->dpa.byte3, arp_hdr->dpa.byte4);
+}*/
 
 void printIcmp(const icmp_header* icmp_hdr)
 {
@@ -216,7 +216,6 @@ void printIcmp(const icmp_header* icmp_hdr)
 
 void printTcp(const tcp_header* tcp_hdr)
 {
-	//TODO : Flag Ç¥Çö
 	printf("================================ TCP =================================\n");
 	printf("SRC Port: %d -> DST Port: %d\n", tcp_hdr->sport, tcp_hdr->dport);
 	printf("Seq: %u, Ack: %u\n", tcp_hdr->seq_num, tcp_hdr->ack_num);

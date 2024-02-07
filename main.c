@@ -3,20 +3,28 @@
 #include "hdr/pkt_io.h"
 /*
 
-»ç¿ëÀÚ´Â Àß ¸ô¶óµµ »ç¿ëÇÒ ¼ö ÀÖ´Â ÀÎÅÍÆäÀÌ½º Á¦°ø
++ ì‚¬ìš©ìžëŠ” ìž˜ ëª°ë¼ë„ ì‚¬ìš©í•  ìˆ˜ ìžˆëŠ” ì¸í„°íŽ˜ì´ìŠ¤ ì œê³µ
++ ë©€í‹°ìŠ¤ë ˆë”© - ìº¡ì²˜ ì¤‘ì§€ ì‹ í˜¸ ëŒ€ê¸°
 
-1. ¿É¼Ç(¸ðµå) ¼±ÅÃ
-2. ÆÐÅ¶ Ã³¸®(Á¤Áö ´ë±â)
-3. Á¤Áö ÈÄ ÀúÀå ¿©ºÎ
+1. ëª¨ë“œ ë° ì˜µì…˜ ì„ íƒ
+2. íŒ¨í‚· ì²˜ë¦¬ -> íŒŒì‹±ëœ ìžë£Œ ë°˜í™˜
+3. ë°˜í™˜ëœ ìžë£Œë¡œ ì˜µì…˜ ìˆ˜í–‰
+4. ì •ì§€ë‚˜ ì¢…ë£Œ í›„ ì €ìž¥ ì—¬ë¶€
 
 */
 
 void printUsage(char* command)
 {
-	printf("Usage: %s [OPTION]\n"
-	"\t\t[ -l ]\n"
-	"\t\t[ -o file ]\n"
-        "\t\t[ -v ]\n",	
+	printf("Usage: %s [MODE] [OPTION]\n"
+	"\tMODE\n"
+	"\t\t[ -l ]\n" // live
+	"\t\t[ -r file ]\n" // offline
+	"\tOPTION\n"
+	"\t\t[ -w file ]\n" // write
+	"\t\t[ -f file ]\n" // filter
+	"\t\t[ -d file ]\n" // detection
+	"\t\t[ -s ]\n" // statistics
+    "\t\t[ -v ]\n", // verbose
 	command);
 }
 
@@ -31,7 +39,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	while ((opt = getopt(argc, argv, "lo:v")) != -1) {
+	while ((opt = getopt(argc, argv, "lr:w:f:d:sv")) != -1) {
 		switch (opt)
 		{
 			case 'l':
@@ -40,16 +48,36 @@ int main(int argc, char* argv[])
 					return -1;
 				break;
 			}
-			case 'o':
+			case 'r':
 			{
 				if (setOffline(&fp, optarg) == -1)
 					return -1;
 				break;
 			}
+			case 'w':
+			{
+				//setWrite
+				break;
+			}
+			case 'f':
+			{
+				//setFilterRule
+				break;
+			}
+			case 'd':
+			{
+				//setDetectionRule
+				break;
+			}
 			case 'v':
 			{
 				//setVerbose
-				//break;
+				break;
+			}
+			case 's':
+			{
+				//setStatistics
+				break;
 			}
 			default:
 			{
@@ -58,5 +86,27 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
-	processPkt(&fp);
+
+	int res;
+	struct pcap_pkthdr* header;
+	const u_char* pkt_data;
+
+	while ((res = pcap_next_ex(fp, &header, &pkt_data)) >= 0) {
+		if (res == 0)
+			continue;
+
+		if (header->len < 14) continue;
+
+		// íŒ¨í‚· ì²˜ë¦¬
+		// ì˜µì…˜ ì²˜ë¦¬
+		processPkt(header, pkt_data);
+	}
+	
+	if (res == -1) {
+		fprintf(stderr, "Error: %s\n", pcap_geterr(fp));
+		return -1;
+	}
+
+	pcap_close(fp);
+	return 0;
 }
