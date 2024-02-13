@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "hdr/pkt_io.h"
+#include "hdr/pkt_handler.h"
 /*
 
 + 사용자는 잘 몰라도 사용할 수 있는 인터페이스 제공
@@ -88,18 +89,20 @@ int main(int argc, char* argv[])
 	}
 
 	int res;
-	struct pcap_pkthdr* header;
+	struct pcap_pkthdr* pkt_hdr;
 	const u_char* pkt_data;
 
-	while ((res = pcap_next_ex(fp, &header, &pkt_data)) >= 0) {
+	while ((res = pcap_next_ex(fp, &pkt_hdr, &pkt_data)) >= 0) {
 		if (res == 0)
 			continue;
 
-		if (header->len < 14) continue;
+		if (pkt_hdr->len < 14) continue;
 
 		// 패킷 처리
 		// 옵션 처리
-		processPkt(header, pkt_data);
+		processPkt(&pkt_data);
+		printEther((ether_header*)pkt_data);
+		printIp((ip_header*)((ether_header*)pkt_data + 1));
 	}
 	
 	if (res == -1) {

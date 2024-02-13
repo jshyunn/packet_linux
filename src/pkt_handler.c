@@ -1,43 +1,35 @@
 #include <stdio.h>
+#include <malloc.h>
 #include <string.h>
+#include "../hdr/protocol.h"
 #include "../hdr/pkt_handler.h"
-#include "../hdr/pkt_io.h"
 
-/*Statistics stat = { 0 };
+#define TO_LITTLE(data) data = ntohs(data); // convert byte order
 
-void handleFrame(const struct pcap_pkthdr* pkt_hdr, const u_char* pkt_data)
+void processPkt(const u_char** pkt_data)
 {
-	printFrame(pkt_hdr);
+	ether_header* ether_hdr = (ether_header*)*pkt_data;
+	TO_LITTLE(ether_hdr->type);
 
-	ether_header* ether_hdr = (ether_header*)pkt_data;
-	ether_hdr->type = ntohs(ether_hdr->type);
-	printEther(ether_hdr);
-	handleEther(ether_hdr);
-}
-
-void handleEther(const ether_header* ether_hdr)
-{
-	ether_type type = ether_hdr->type;
-	switch (type)
+	switch (ether_hdr->type)
 	{
 		case IPv4:
 		{
 			ip_header* ip_hdr = (ip_header*)(ether_hdr + 1);
-			ip_hdr->tlen = ntohs(ip_hdr->tlen); // convert byte order (big endian(network) -> little(windows))
-			ip_hdr->id = ntohs(ip_hdr->id);
-			ip_hdr->off = ntohs(ip_hdr->off);
-			ip_hdr->checksum = ntohs(ip_hdr->checksum);
-			printIp(ip_hdr);
+			TO_LITTLE(ip_hdr->len);
+			TO_LITTLE(ip_hdr->id);
+			TO_LITTLE(ip_hdr->off);
+			TO_LITTLE(ip_hdr->sum);
+
 			handleIp(ip_hdr);
 			break;
 		}
 		case ARP:
 		{
 			arp_header* arp_hdr = (arp_header*)(ether_hdr + 1);
-			arp_hdr->hard = ntohs(arp_hdr->hard);
-			arp_hdr->pro = ntohs(arp_hdr->pro);
-			arp_hdr->op = ntohs(arp_hdr->op);
-			printArp(arp_hdr);
+			TO_LITTLE(arp_hdr->hard);
+			TO_LITTLE(arp_hdr->pro);
+			TO_LITTLE(arp_hdr->op);
 			break;
 		}
 	}
@@ -45,45 +37,38 @@ void handleEther(const ether_header* ether_hdr)
 
 void handleIp(const ip_header* ip_hdr)
 {
-	ip_type type = ip_hdr->pro;
-	switch (type)
+	switch (ip_hdr->p)
 	{
 		case ICMP:
 		{
 			icmp_header* icmp_hdr = (icmp_header*)(ip_hdr + 1);
-			icmp_hdr->checksum = ntohs(icmp_hdr->checksum);
-			printIcmp(icmp_hdr);
-			stat.icmp += 1;
+			TO_LITTLE(icmp_hdr->sum);
 
 			break;
 		}
 		case TCP:
 		{
 			tcp_header* tcp_hdr = (tcp_header*)(ip_hdr + 1);
-			tcp_hdr->sport = (int)ntohs(tcp_hdr->sport);
-			tcp_hdr->dport = (int)ntohs(tcp_hdr->dport);
-			tcp_hdr->seq_num = ntohl(tcp_hdr->seq_num);
-			tcp_hdr->ack_num = ntohl(tcp_hdr->ack_num);
-			tcp_hdr->hlen_flags = ntohs(tcp_hdr->hlen_flags);
-			tcp_hdr->win_size = (int)ntohs(tcp_hdr->win_size);
-			tcp_hdr->checksum = ntohs(tcp_hdr->checksum);
-			tcp_hdr->urgent_ptr = ntohs(tcp_hdr->urgent_ptr);
-			printTcp(tcp_hdr);
-			stat.tcp += 1;
+			TO_LITTLE(tcp_hdr->sport);
+			TO_LITTLE(tcp_hdr->dport);
+			TO_LITTLE(tcp_hdr->seq_num);
+			TO_LITTLE(tcp_hdr->ack_num);
+			TO_LITTLE(tcp_hdr->hlen_flags);
+			TO_LITTLE(tcp_hdr->win_size);
+			TO_LITTLE(tcp_hdr->sum);
+			TO_LITTLE(tcp_hdr->ugt_ptr);
 
 			break;
 		}
 		case UDP:
 		{
 			udp_header* udp_hdr = (udp_header*)(ip_hdr + 1);
-			udp_hdr->sport = (int)ntohs(udp_hdr->sport);
-			udp_hdr->dport = (int)ntohs(udp_hdr->dport);
-			udp_hdr->tlen = (int)ntohs(udp_hdr->tlen);
-			udp_hdr->checksum = ntohs(udp_hdr->checksum);
-			printUdp(udp_hdr);
-			stat.udp += 1;
+			TO_LITTLE(udp_hdr->sport);
+			TO_LITTLE(udp_hdr->dport);
+			TO_LITTLE(udp_hdr->tlen);
+			TO_LITTLE(udp_hdr->sum);
 
 			break;
 		}
 	}
-}*/
+}

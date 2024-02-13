@@ -6,8 +6,6 @@
 #include "../hdr/pkt_io.h"
 #include "../hdr/pkt_handler.h"
 
-#define TO_LITTLE(data) data = ntohs(data);
-
 int setLive(pcap_t** fp)
 {
 	char errbuf[PCAP_ERRBUF_SIZE];
@@ -100,27 +98,7 @@ int printStatistics(const struct pcap_pkthdr* header)
 	printf("\nNo: %d\tPps: %d\tBps: %f MB/s", idx, cnt, bytes / 1000);
 }
 
-int processPkt(const struct pcap_pkthdr* pkt_hdr, const u_char* pkt_data)
-{
-	struct ether_header* ether_hdr = (struct ether_header*)pkt_data;
-	TO_LITTLE(ether_hdr->ether_type);
-	printEther(ether_hdr);
-	switch (ether_hdr->ether_type)
-	{
-		case ETHERTYPE_IP:
-		{
-			struct ip* ip_hdr = (struct ip*)(ether_hdr + 1);
-			printIp(ip_hdr);
-		}
-		case ETHERTYPE_ARP:
-		{
-			struct ether_arp* arp_hdr = (struct ether_arp*)(ether_hdr + 1);
-			//printArp(arp_hdr);
-		}
-	}
-}
-
-/*void printFrame(const struct pcap_pkthdr* pkt_hdr)
+void printFrame(const struct pcap_pkthdr* pkt_hdr)
 {
 	struct tm* ltime;
 	char timesec[9];
@@ -131,62 +109,68 @@ int processPkt(const struct pcap_pkthdr* pkt_hdr, const u_char* pkt_data)
 	strftime(timesec, sizeof timesec, "%H:%M:%S", ltime);
 	printf("\n=============================== Frame ================================\n");
 	printf("Time: %s.%ld Frame Length: %d Capture Length: %d\n", timesec, pkt_hdr->ts.tv_usec, pkt_hdr->caplen, pkt_hdr->len);
-}*/
+}
 
-void printEther(const struct ether_header* ether_hdr)
+void printEther(const ether_header* ether_hdr)
 {
 	char typestr[10];
-	switch (ether_hdr->ether_type)
+	switch (ether_hdr->type)
 	{
-	case ETHERTYPE_IP:
+	case IPv4:
 		strcpy(typestr, "IPv4");
 		break;
-	case ETHERTYPE_ARP:
+	case ARP:
 		strcpy(typestr, "ARP");
 		break;
-	case ETHERTYPE_REVARP:
+	case RARP:
 		strcpy(typestr, "RARP");
 		break;
-	case ETHERTYPE_IPV6:
+	case VLAN:
+		strcpy(typestr, "VLAN");
+		break;
+	case IPv6:
 		strcpy(typestr, "IPv6");
+		break;
+	case LP:
+		strcpy(typestr, "Loopbcak");
 		break;
 	}
 	printf("============================== Ethernet ==============================\n");
 	printf("SRC MAC: %02x:%02x:%02x:%02x:%02x:%02x -> DST MAC: %02x:%02x:%02x:%02x:%02x:%02x Type: 0x%04x(%s)\n",
-		ether_hdr->ether_dhost[0], ether_hdr->ether_dhost[1], ether_hdr->ether_dhost[2], ether_hdr->ether_dhost[3], ether_hdr->ether_dhost[4], ether_hdr->ether_dhost[5],
-		ether_hdr->ether_shost[0], ether_hdr->ether_shost[1], ether_hdr->ether_shost[2], ether_hdr->ether_shost[3], ether_hdr->ether_shost[4], ether_hdr->ether_shost[5],
-		ether_hdr->ether_type, typestr);
+		ether_hdr->src.byte1, ether_hdr->src.byte2, ether_hdr->src.byte3, ether_hdr->src.byte4, ether_hdr->src.byte5, ether_hdr->src.byte6,
+		ether_hdr->dst.byte1, ether_hdr->dst.byte2, ether_hdr->dst.byte3, ether_hdr->dst.byte4, ether_hdr->dst.byte5, ether_hdr->dst.byte6,
+		ether_hdr->type, typestr);
 }
 
-void printIp(const struct ip* ip_hdr)
+void printIp(const ip_header* ip_hdr)
 {
 	char typestr[10];
-	switch (ip_hdr->ip_p)
+	switch (ip_hdr->p)
 	{
-	case IPPROTO_ICMP:
+	case ICMP:
 		strcpy(typestr, "ICMP");
 		break;
-	case IPPROTO_TCP:
+	case TCP:
 		strcpy(typestr, "TCP");	
 		break;
-	case IPPROTO_UDP:
+	case UDP:
 		strcpy(typestr, "UDP");
 		break;
 	}
 	
 	printf("=============================== IPv4 =================================\n");
-	printf("Version: %d\n", ip_hdr->ip_v);
-	printf("Internet Header Length: %d\n", ip_hdr->ip_hl * 4);
-	printf("Type of Service: 0x%02x\n", ip_hdr->ip_tos);
-	printf("Total Length: %d\n", ntohs(ip_hdr->ip_len));
-	printf("Fragment Identification: 0x%04x\n", ip_hdr->ip_id);
-	printf("Fragmentation Flags & Offset: %x\n", ip_hdr->ip_off);
-	printf("Time to Live: %d\n", ip_hdr->ip_ttl);
-	printf("Protocol: %d(%s)\n", ip_hdr->ip_p, typestr);
-	printf("Header Checksum : 0x%04x\n", ip_hdr->ip_sum);
-	/*printf("SRC IP: %d.%d.%d.%d -> DST IP: %d.%d.%d.%d\n",
-		ip_hdr->ip_src.s_addr, ip_hdr->ip_src.s_addr, ip_hdr->ip_src.s_addr, ip_hdr->ip_src.s_addr,
-		ip_hdr->ip_dst.s_addr, ip_hdr->ip_dst.s_addr, ip_hdr->ip_dst.s_addr, ip_hdr->ip_dst.s_addr);*/
+	printf("Version: %d\n", ip_hdr->v);
+	printf("Internet Header Length: %d\n", ip_hdr->hl * 4);
+	printf("Type of Service: 0x%02x\n", ip_hdr->tos);
+	printf("Total Length: %d\n", ip_hdr->len);
+	printf("Fragment Identification: 0x%04x\n", ip_hdr->id);
+	printf("Fragmentation Flags & Offset: %x\n", ip_hdr->off);
+	printf("Time to Live: %d\n", ip_hdr->ttl);
+	printf("Protocol: %d(%s)\n", ip_hdr->p, typestr);
+	printf("Header Checksum : 0x%04x\n", ip_hdr->sum);
+	printf("SRC IP: %d.%d.%d.%d -> DST IP: %d.%d.%d.%d\n",
+		ip_hdr->src.byte1, ip_hdr->src.byte2, ip_hdr->src.byte3, ip_hdr->src.byte4,
+		ip_hdr->dst.byte1, ip_hdr->dst.byte2, ip_hdr->dst.byte3, ip_hdr->dst.byte4);
 }
 
 /*void printArp(const ether_arp* arp_hdr)
@@ -211,7 +195,7 @@ void printIcmp(const icmp_header* icmp_hdr)
 	printf("================================ ICMP ================================\n");
 	printf("Type: 0x%02x\n", icmp_hdr->type);
 	printf("Code: 0x%02x\n", icmp_hdr->code);
-	printf("Checksum: 0x%04x\n", icmp_hdr->checksum);
+	printf("Checksum: 0x%04x\n", icmp_hdr->sum);
 }
 
 void printTcp(const tcp_header* tcp_hdr)
@@ -222,8 +206,8 @@ void printTcp(const tcp_header* tcp_hdr)
 	printf("Header Len: %d\n", (ntohs(tcp_hdr->hlen_flags & 0xf000) / 16 * 4));
 	printf("Flags: 0x%03x\n", (tcp_hdr->hlen_flags & 0x0fff));
 	printf("Window Size: %d\n", tcp_hdr->win_size);
-	printf("Checksum: 0x%04x\n", tcp_hdr->checksum);
-	printf("Urgent Pointer: 0x%04x\n", tcp_hdr->urgent_ptr);
+	printf("Checksum: 0x%04x\n", tcp_hdr->sum);
+	printf("Urgent Pointer: 0x%04x\n", tcp_hdr->ugt_ptr);
 }
 
 void printUdp(const udp_header* udp_hdr)
@@ -231,5 +215,5 @@ void printUdp(const udp_header* udp_hdr)
 	printf("================================ UDP =================================\n");
 	printf("SRC Port: %d -> DST Port: %d\n", ntohs(udp_hdr->sport), ntohs(udp_hdr->dport));
 	printf("Total Length: %d\n", ntohs(udp_hdr->tlen));
-	printf("Checksum: 0x%04x\n", ntohs(udp_hdr->checksum));
+	printf("Checksum: 0x%04x\n", ntohs(udp_hdr->sum));
 }

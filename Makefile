@@ -6,9 +6,9 @@ TARGET=main.out
 $(TARGET):$(OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-main.o:./hdr/pkt_io.h
+main.o:./hdr/pkt_io.h ./hdr/pkt_handler.h
 ./src/pkt_io.o:./hdr/pkt_io.h
-./src/pkt_handler.o:./hdr/pkt_handler.h
+./src/pkt_handler.o:./hdr/pkt_handler.h ./hdr/protocol.h
 
 clean:
 	rm -f $(OBJS)
