@@ -16,7 +16,7 @@
 
 void printUsage(char* command)
 {
-	printf("Usage: %s [MODE] [OPTION]\n"
+	printf("Usage: ./%s [MODE] [OPTION]\n"
 	"\tMODE\n"
 	"\t\t[ -l ]\n" // live
 	"\t\t[ -r file ]\n" // offline
@@ -100,9 +100,10 @@ int main(int argc, char* argv[])
 
 		// 패킷 처리
 		// 옵션 처리
-		processPkt(&pkt_data);
-		printEther((ether_header*)pkt_data);
-		printIp((ip_header*)((ether_header*)pkt_data + 1));
+		//processPkt(&pkt_data);
+		ether_header* ether_hdr = getEther(pkt_data);
+		printEther(ether_hdr);
+		//printIp((ip_header*)((ether_header*)pkt_data + 1));
 	}
 	
 	if (res == -1) {

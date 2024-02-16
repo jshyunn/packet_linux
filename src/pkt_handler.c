@@ -1,10 +1,22 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
-#include "../hdr/protocol.h"
 #include "../hdr/pkt_handler.h"
 
 #define TO_LITTLE(data) data = ntohs(data); // convert byte order
+
+ether_header* getEther(const u_char* pkt_data)
+{
+	ether_header* ether_hdr = (ether_header*)malloc(sizeof(ether_header));
+	ether_hdr = (ether_header*)pkt_data;
+	TO_LITTLE(ether_hdr->type);
+	return ether_hdr;
+}
+
+void delEther(ether_header* ether_hdr)
+{
+	free(ether_hdr);
+}
 
 void processPkt(const u_char** pkt_data)
 {
