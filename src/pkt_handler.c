@@ -8,7 +8,7 @@
 ether_header* getEther(const u_char* pkt_data)
 {
 	ether_header* ether_hdr = (ether_header*)malloc(sizeof(ether_header));
-	ether_hdr = (ether_header*)pkt_data;
+	memcpy(ether_hdr, (ether_header*)pkt_data, sizeof(ether_header));
 	TO_LITTLE(ether_hdr->type);
 	return ether_hdr;
 }

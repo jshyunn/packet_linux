@@ -103,6 +103,7 @@ int main(int argc, char* argv[])
 		//processPkt(&pkt_data);
 		ether_header* ether_hdr = getEther(pkt_data);
 		printEther(ether_hdr);
+		delEther(ether_hdr);
 		//printIp((ip_header*)((ether_header*)pkt_data + 1));
 	}
 	
