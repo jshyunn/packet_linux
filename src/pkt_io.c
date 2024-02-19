@@ -173,7 +173,7 @@ void printIPv4(const ipv4_header* ipv4_hdr)
 		ipv4_hdr->dst.byte1, ipv4_hdr->dst.byte2, ipv4_hdr->dst.byte3, ipv4_hdr->dst.byte4);
 }
 
-/*void printArp(const ether_arp* arp_hdr)
+void printArp(const arp_header* arp_hdr)
 {
 	printf("================================ ARP =================================\n");
 	printf("Hardware Type: 0x%04x\n", arp_hdr->hard);
@@ -187,7 +187,7 @@ void printIPv4(const ipv4_header* ipv4_hdr)
 	printf("Target MAC Address: %02x:%02x:%02x:%02x:%02x:%02x\n",
 		arp_hdr->dha.byte1, arp_hdr->dha.byte2, arp_hdr->dha.byte3, arp_hdr->dha.byte4, arp_hdr->dha.byte5, arp_hdr->dha.byte6);
 	printf("Target IP Address: %d.%d.%d.%d\n", arp_hdr->dpa.byte1, arp_hdr->dpa.byte2, arp_hdr->dpa.byte3, arp_hdr->dpa.byte4);
-}*/
+}
 
 void printIcmp(const icmp_header* icmp_hdr)
 {

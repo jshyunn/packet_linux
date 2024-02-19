@@ -35,6 +35,22 @@ void delIPv4(ipv4_header* ipv4_hdr)
 	free(ipv4_hdr);
 }
 
+arp_header* getArp(const u_char* pkt_data)
+{
+	ether_header* ether_hdr = (ether_header*)pkt_data;
+	arp_header* arp_hdr = (arp_header*)malloc(sizeof(arp_header));
+	memcpy(arp_hdr, (arp_header*)(ether_hdr + 1), sizeof(arp_header));
+	TO_LITTLE(arp_hdr->hard);
+	TO_LITTLE(arp_hdr->pro);
+	TO_LITTLE(arp_hdr->op);
+	return arp_hdr;
+}
+
+void delArp(arp_header* arp_hdr)
+{
+	free(arp_hdr);
+}
+
 void processPkt(const u_char** pkt_data)
 {
 	ether_header* ether_hdr = (ether_header*)*pkt_data;
