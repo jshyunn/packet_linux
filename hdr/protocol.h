@@ -41,14 +41,14 @@ typedef enum ether_type {
 
 
 /* IP Header Structure */
-typedef struct ip_header {
+typedef struct ipv4_header {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-    u_char hl:4;    /* Internet header length(4bits) */
+	u_char hl:4;    /* Internet header length(4bits) */
 	u_char v:4;     /* Version(4bits) */
 #endif
 #if __BYTE_ORDER == __BIG_ENDIAN
 	u_char v:4;     /* Version(4bits) */
-    u_char hl:4;    /* Internet header length(4bits) */
+	u_char hl:4;    /* Internet header length(4bits) */
 #endif
 	u_char tos;     /* Type of service */
 	u_short len;    /* Total length */
@@ -59,14 +59,14 @@ typedef struct ip_header {
 	u_short sum;    /* Header Checksum */
 	ip_addr src;    /* Source address */
 	ip_addr dst;    /* Destination address */
-} ip_header;
+} ipv4_header;
 
 /* Type Field */
-typedef enum ip_type {
+typedef enum ipv4_type {
 	ICMP = 0x0001,
 	TCP = 0x0006,
 	UDP = 0x0011
-} ip_type;
+} ipv4_type;
 
 
 /* ARP Structure */

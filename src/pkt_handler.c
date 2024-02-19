@@ -18,6 +18,23 @@ void delEther(ether_header* ether_hdr)
 	free(ether_hdr);
 }
 
+ipv4_header* getIPv4(const u_char* pkt_data)
+{
+	ether_header* ether_hdr = (ether_header*)pkt_data;
+	ipv4_header* ipv4_hdr = (ipv4_header*)malloc(sizeof(ipv4_header));
+	memcpy(ipv4_hdr, (ipv4_header*)(ether_hdr + 1), sizeof(ipv4_header));
+	TO_LITTLE(ipv4_hdr->len);
+	TO_LITTLE(ipv4_hdr->id);
+	TO_LITTLE(ipv4_hdr->off);
+	TO_LITTLE(ipv4_hdr->sum);
+	return ipv4_hdr;
+}
+
+void delIPv4(ipv4_header* ipv4_hdr)
+{
+	free(ipv4_hdr);
+}
+
 void processPkt(const u_char** pkt_data)
 {
 	ether_header* ether_hdr = (ether_header*)*pkt_data;
@@ -27,13 +44,13 @@ void processPkt(const u_char** pkt_data)
 	{
 		case IPv4:
 		{
-			ip_header* ip_hdr = (ip_header*)(ether_hdr + 1);
-			TO_LITTLE(ip_hdr->len);
-			TO_LITTLE(ip_hdr->id);
-			TO_LITTLE(ip_hdr->off);
-			TO_LITTLE(ip_hdr->sum);
+			ipv4_header* ipv4_hdr = (ipv4_header*)(ether_hdr + 1);
+			TO_LITTLE(ipv4_hdr->len);
+			TO_LITTLE(ipv4_hdr->id);
+			TO_LITTLE(ipv4_hdr->off);
+			TO_LITTLE(ipv4_hdr->sum);
 
-			handleIp(ip_hdr);
+			handleIp(ipv4_hdr);
 			break;
 		}
 		case ARP:
@@ -47,20 +64,20 @@ void processPkt(const u_char** pkt_data)
 	}
 }
 
-void handleIp(const ip_header* ip_hdr)
+void handleIp(const ipv4_header* ipv4_hdr)
 {
-	switch (ip_hdr->p)
+	switch (ipv4_hdr->p)
 	{
 		case ICMP:
 		{
-			icmp_header* icmp_hdr = (icmp_header*)(ip_hdr + 1);
+			icmp_header* icmp_hdr = (icmp_header*)(ipv4_hdr + 1);
 			TO_LITTLE(icmp_hdr->sum);
 
 			break;
 		}
 		case TCP:
 		{
-			tcp_header* tcp_hdr = (tcp_header*)(ip_hdr + 1);
+			tcp_header* tcp_hdr = (tcp_header*)(ipv4_hdr + 1);
 			TO_LITTLE(tcp_hdr->sport);
 			TO_LITTLE(tcp_hdr->dport);
 			TO_LITTLE(tcp_hdr->seq_num);
@@ -74,7 +91,7 @@ void handleIp(const ip_header* ip_hdr)
 		}
 		case UDP:
 		{
-			udp_header* udp_hdr = (udp_header*)(ip_hdr + 1);
+			udp_header* udp_hdr = (udp_header*)(ipv4_hdr + 1);
 			TO_LITTLE(udp_hdr->sport);
 			TO_LITTLE(udp_hdr->dport);
 			TO_LITTLE(udp_hdr->tlen);

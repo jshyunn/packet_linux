@@ -142,10 +142,10 @@ void printEther(const ether_header* ether_hdr)
 		ether_hdr->type, typestr);
 }
 
-void printIp(const ip_header* ip_hdr)
+void printIPv4(const ipv4_header* ipv4_hdr)
 {
 	char typestr[10];
-	switch (ip_hdr->p)
+	switch (ipv4_hdr->p)
 	{
 	case ICMP:
 		strcpy(typestr, "ICMP");
@@ -159,18 +159,18 @@ void printIp(const ip_header* ip_hdr)
 	}
 	
 	printf("=============================== IPv4 =================================\n");
-	printf("Version: %d\n", ip_hdr->v);
-	printf("Internet Header Length: %d\n", ip_hdr->hl * 4);
-	printf("Type of Service: 0x%02x\n", ip_hdr->tos);
-	printf("Total Length: %d\n", ip_hdr->len);
-	printf("Fragment Identification: 0x%04x\n", ip_hdr->id);
-	printf("Fragmentation Flags & Offset: %x\n", ip_hdr->off);
-	printf("Time to Live: %d\n", ip_hdr->ttl);
-	printf("Protocol: %d(%s)\n", ip_hdr->p, typestr);
-	printf("Header Checksum : 0x%04x\n", ip_hdr->sum);
+	printf("Version: %d\n", ipv4_hdr->v);
+	printf("Internet Header Length: %d\n", ipv4_hdr->hl * 4);
+	printf("Type of Service: 0x%02x\n", ipv4_hdr->tos);
+	printf("Total Length: %d\n", ipv4_hdr->len);
+	printf("Fragment Identification: 0x%04x\n", ipv4_hdr->id);
+	printf("Fragmentation Flags & Offset: %x\n", ipv4_hdr->off);
+	printf("Time to Live: %d\n", ipv4_hdr->ttl);
+	printf("Protocol: %d(%s)\n", ipv4_hdr->p, typestr);
+	printf("Header Checksum : 0x%04x\n", ipv4_hdr->sum);
 	printf("SRC IP: %d.%d.%d.%d -> DST IP: %d.%d.%d.%d\n",
-		ip_hdr->src.byte1, ip_hdr->src.byte2, ip_hdr->src.byte3, ip_hdr->src.byte4,
-		ip_hdr->dst.byte1, ip_hdr->dst.byte2, ip_hdr->dst.byte3, ip_hdr->dst.byte4);
+		ipv4_hdr->src.byte1, ipv4_hdr->src.byte2, ipv4_hdr->src.byte3, ipv4_hdr->src.byte4,
+		ipv4_hdr->dst.byte1, ipv4_hdr->dst.byte2, ipv4_hdr->dst.byte3, ipv4_hdr->dst.byte4);
 }
 
 /*void printArp(const ether_arp* arp_hdr)
