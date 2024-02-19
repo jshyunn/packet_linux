@@ -100,17 +100,9 @@ int main(int argc, char* argv[])
 
 		// 패킷 처리
 		// 옵션 처리
-		//processPkt(&pkt_data);
-		ether_header* ether_hdr = getEther(pkt_data);
-		ipv4_header* ipv4_hdr = getIPv4(pkt_data);
-		arp_header* arp_hdr = getArp(pkt_data);
-		printEther(ether_hdr);
-		printIPv4(ipv4_hdr);
-		printArp(arp_hdr);
-		delEther(ether_hdr);
-		delIPv4(ipv4_hdr);
-		delArp(arp_hdr);
-		//printIp((ip_header*)((ether_header*)pkt_data + 1));
+		pktinfo_t* pkt_info = getPktInfo(pkt_data);
+		printPktInfo(pkt_info);
+		releasePktInfo(pkt_info);
 	}
 	
 	if (res == -1) {

@@ -2,9 +2,7 @@
 #include <time.h>
 #include <string.h>
 #include <pcap.h>
-#include <malloc.h>
 #include "../hdr/pkt_io.h"
-#include "../hdr/pkt_handler.h"
 
 int setLive(pcap_t** fp)
 {
@@ -96,6 +94,11 @@ int printStatistics(const struct pcap_pkthdr* header)
 	cnt++;
 	bytes += header->caplen;
 	printf("\nNo: %d\tPps: %d\tBps: %f MB/s", idx, cnt, bytes / 1000);
+}
+
+void printPktInfo(const pktinfo_t* pkt_info)
+{
+
 }
 
 void printFrame(const struct pcap_pkthdr* pkt_hdr)

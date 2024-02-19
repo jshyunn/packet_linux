@@ -1,56 +1,40 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
+#include "../hdr/pkt_parser.h"
 #include "../hdr/pkt_handler.h"
 
-#define TO_LITTLE(data) data = ntohs(data); // convert byte order
-
-ether_header* getEther(const u_char* pkt_data)
+pktinfo_t* getPktInfo(const u_char* pkt_data)
 {
-	ether_header* ether_hdr = (ether_header*)malloc(sizeof(ether_header));
-	memcpy(ether_hdr, (ether_header*)pkt_data, sizeof(ether_header));
-	TO_LITTLE(ether_hdr->type);
-	return ether_hdr;
+	pktinfo_t* pkt_info = (pktinfo_t*)malloc(sizeof(pktinfo_t));
+	ether_header* ether_hdr = getEther(pkt_data);
+	memcpy(pkt_info->frame, ether_hdr, sizeof(ether_hdr));
+	delEther(ether_hdr);
+	switch (ether_hdr->type)
+	{
+		case IPv4:
+		{
+			ipv4_header* ipv4_hdr = getIPv4(pkt_data);
+			memcpy(pkt_info->packet, ipv4_hdr, sizeof(ipv4_hdr));
+			delIPv4(ipv4_hdr);
+		}
+		case ARP:
+		{
+			arp_header* arp_hdr = getArp(pkt_data);
+			memcpy(pkt_info->packet, arp_hdr, sizeof(arp_hdr));
+			delArp(arp_hdr);
+		}
+	}
+	return pkt_info;
 }
 
-void delEther(ether_header* ether_hdr)
+void releasePktInfo(pktinfo_t* pkt_info)
 {
-	free(ether_hdr);
+	free(pkt_info->frame);
+	free(pkt_info->packet);
+	free(pkt_info);
 }
-
-ipv4_header* getIPv4(const u_char* pkt_data)
-{
-	ether_header* ether_hdr = (ether_header*)pkt_data;
-	ipv4_header* ipv4_hdr = (ipv4_header*)malloc(sizeof(ipv4_header));
-	memcpy(ipv4_hdr, (ipv4_header*)(ether_hdr + 1), sizeof(ipv4_header));
-	TO_LITTLE(ipv4_hdr->len);
-	TO_LITTLE(ipv4_hdr->id);
-	TO_LITTLE(ipv4_hdr->off);
-	TO_LITTLE(ipv4_hdr->sum);
-	return ipv4_hdr;
-}
-
-void delIPv4(ipv4_header* ipv4_hdr)
-{
-	free(ipv4_hdr);
-}
-
-arp_header* getArp(const u_char* pkt_data)
-{
-	ether_header* ether_hdr = (ether_header*)pkt_data;
-	arp_header* arp_hdr = (arp_header*)malloc(sizeof(arp_header));
-	memcpy(arp_hdr, (arp_header*)(ether_hdr + 1), sizeof(arp_header));
-	TO_LITTLE(arp_hdr->hard);
-	TO_LITTLE(arp_hdr->pro);
-	TO_LITTLE(arp_hdr->op);
-	return arp_hdr;
-}
-
-void delArp(arp_header* arp_hdr)
-{
-	free(arp_hdr);
-}
-
+/*
 void processPkt(const u_char** pkt_data)
 {
 	ether_header* ether_hdr = (ether_header*)*pkt_data;
@@ -117,3 +101,4 @@ void handleIp(const ipv4_header* ipv4_hdr)
 		}
 	}
 }
+*/
