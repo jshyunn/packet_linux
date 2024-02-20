@@ -2,11 +2,10 @@
 #include <pcap.h>
 
 typedef struct pktinfo_t {
-	void* frame;
-	void* packet;
-	void* segment;
 	void* data;
+	struct pktinfo_t* next;
 } pktinfo_t;
 
-pktinfo_t* getPktInfo(const u_char*);
-void releasePktInfo(pktinfo_t*);
+void getPktInfo(pktinfo_t*, const u_char*);
+void insertPktInfo(pktinfo_t*, void*);
+void releasePktInfo(pktinfo_t**);

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
-#include "hdr/pkt_io.h"
+#include "hdr/print.h"
+#include "hdr/controller.h"
 #include "hdr/pkt_handler.h"
 /*
 
@@ -100,7 +101,8 @@ int main(int argc, char* argv[])
 
 		// 패킷 처리
 		// 옵션 처리
-		pktinfo_t* pkt_info = getPktInfo(pkt_data);
+		pktinfo_t* pkt_info;
+		getPktInfo(&pkt_info, pkt_data);
 		printPktInfo(pkt_info);
 		releasePktInfo(pkt_info);
 	}

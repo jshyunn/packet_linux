@@ -4,35 +4,39 @@
 #include "../hdr/pkt_parser.h"
 #include "../hdr/pkt_handler.h"
 
-pktinfo_t* getPktInfo(const u_char* pkt_data)
+void getPktInfo(pktinfo_t** pkt_info, const u_char* pkt_data)
 {
-	pktinfo_t* pkt_info = (pktinfo_t*)malloc(sizeof(pktinfo_t));
 	ether_header* ether_hdr = getEther(pkt_data);
-	memcpy(pkt_info->frame, ether_hdr, sizeof(ether_hdr));
-	delEther(ether_hdr);
+	(*pkt_info)->data = ether_hdr;
 	switch (ether_hdr->type)
 	{
 		case IPv4:
 		{
 			ipv4_header* ipv4_hdr = getIPv4(pkt_data);
-			memcpy(pkt_info->packet, ipv4_hdr, sizeof(ipv4_hdr));
-			delIPv4(ipv4_hdr);
+			(*pkt_info)->next->data = ipv4_hdr;
 		}
 		case ARP:
 		{
 			arp_header* arp_hdr = getArp(pkt_data);
-			memcpy(pkt_info->packet, arp_hdr, sizeof(arp_hdr));
-			delArp(arp_hdr);
+			(*pkt_info)->next->data = arp_hdr;
 		}
 	}
-	return pkt_info;
+}
+
+void insertPktInfo(pktinfo_t* pkt_info, void* pkt_data)
+{
+	pkt_info
 }
 
 void releasePktInfo(pktinfo_t* pkt_info)
 {
-	free(pkt_info->frame);
-	free(pkt_info->packet);
-	free(pkt_info);
+	/*while (pkt_info != NULL)
+	{
+		free(pkt_info->data);
+		pkt_info = pkt_info->next;
+	}*/
+	free(pkt_info->next->data);
+	free(pkt_info->data);
 }
 /*
 void processPkt(const u_char** pkt_data)

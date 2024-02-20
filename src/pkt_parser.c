@@ -36,17 +36,17 @@ arp_header* getArp(const u_char* pkt_data)
 	return arp_hdr;
 }
 
-void delEther(ether_header* ether_hdr)
+void releaseEther(ether_header* ether_hdr)
 {
 	free(ether_hdr);
 }
 
-void delIPv4(ipv4_header* ipv4_hdr)
+void releaseIPv4(ipv4_header* ipv4_hdr)
 {
 	free(ipv4_hdr);
 }
 
-void delArp(arp_header* arp_hdr)
+void releaseArp(arp_header* arp_hdr)
 {
 	free(arp_hdr);
 }
