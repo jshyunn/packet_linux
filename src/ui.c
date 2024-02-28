@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
-#include <pcap.h>
-#include "../hdr/controller.h"
+#include "../hdr/ui.h"
 
 int setLive(pcap_t** fp)
 {

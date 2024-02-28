@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include "hdr/print.h"
 #include "hdr/controller.h"
-#include "hdr/pkt_handler.h"
 /*
 
 + 사용자는 잘 몰라도 사용할 수 있는 인터페이스 제공
@@ -101,10 +100,7 @@ int main(int argc, char* argv[])
 
 		// 패킷 처리
 		// 옵션 처리
-		pktinfo_t* pkt_info;
-		getPktInfo(&pkt_info, pkt_data);
-		printPktInfo(pkt_info);
-		releasePktInfo(pkt_info);
+		printPkt(pkt_data);	
 	}
 	
 	if (res == -1) {

@@ -21,11 +21,6 @@ int printStatistics(const struct pcap_pkthdr* header)
 	printf("\nNo: %d\tPps: %d\tBps: %f MB/s", idx, cnt, bytes / 1000);
 }
 
-void printPktInfo(const pktinfo_t* pkt_info)
-{
-	printEther(pkt_info->data);
-}
-
 void printFrame(const struct pcap_pkthdr* pkt_hdr)
 {
 	struct tm* ltime;
