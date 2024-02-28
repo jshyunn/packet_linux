@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "../hdr/print.h"
+#include "../hdr/pkt_parser.h"
 
 int printStatistics(const struct pcap_pkthdr* header)
 {
@@ -21,7 +22,15 @@ int printStatistics(const struct pcap_pkthdr* header)
 	printf("\nNo: %d\tPps: %d\tBps: %f MB/s", idx, cnt, bytes / 1000);
 }
 
-void printFrame(const struct pcap_pkthdr* pkt_hdr)
+void printPkt(const struct pcap_pkthdr* pkt_hdr, const void* pkt_data)
+{
+	printInfo(pkt_hdr);
+	ether_header* ether_hdr = getEther(pkt_data);
+	printEther(ether_hdr);
+	releaseEther(ether_hdr);
+}
+
+void printInfo(const struct pcap_pkthdr* pkt_hdr)
 {
 	struct tm* ltime;
 	char timesec[9];
@@ -30,8 +39,8 @@ void printFrame(const struct pcap_pkthdr* pkt_hdr)
 	local_tv_sec = pkt_hdr->ts.tv_sec;
 	ltime = localtime(&local_tv_sec);
 	strftime(timesec, sizeof timesec, "%H:%M:%S", ltime);
-	printf("\n=============================== Frame ================================\n");
-	printf("Time: %s.%ld Frame Length: %d Capture Length: %d\n", timesec, pkt_hdr->ts.tv_usec, pkt_hdr->caplen, pkt_hdr->len);
+	printf("%s.%ld, Frame Length: %d, Capture Length: %d\n", 
+			timesec, pkt_hdr->ts.tv_usec, pkt_hdr->caplen, pkt_hdr->len);
 }
 
 void printEther(const ether_header* ether_hdr)

@@ -2,7 +2,8 @@
 
 #include "protocol.h"
 
-void printFrame(const struct pcap_pkthdr*);
+void printPkt(const struct pcap_pkthdr*, const void*);
+void printInfo(const struct pcap_pkthdr*);
 void printEther(const ether_header*);
 void printIPv4(const ipv4_header*);
 void printArp(const arp_header*);

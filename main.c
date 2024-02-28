@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "hdr/print.h"
-#include "hdr/controller.h"
+#include "hdr/ui.h"
 /*
 
 + 사용자는 잘 몰라도 사용할 수 있는 인터페이스 제공
@@ -25,7 +25,7 @@ void printUsage(char* command)
 	"\t\t[ -f file ]\n" // filter
 	"\t\t[ -d file ]\n" // detection
 	"\t\t[ -s ]\n" // statistics
-    "\t\t[ -v ]\n", // verbose
+    	"\t\t[ -v ]\n", // verbose
 	command);
 }
 
@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 
 		// 패킷 처리
 		// 옵션 처리
-		printPkt(pkt_data);	
+		printPkt(pkt_hdr, pkt_data);	
 	}
 	
 	if (res == -1) {

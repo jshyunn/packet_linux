@@ -1,5 +1,5 @@
 CC=gcc
-OBJS=main.o ./src/controller.o ./src/pkt_parser.o ./src/print.o
+OBJS=main.o ./src/ui.o ./src/pkt_parser.o ./src/print.o
 LDFLAGS=-lpcap -lpthread
 TARGET=main.out
 
@@ -15,9 +15,9 @@ clean:
 	rm -f $(OBJS)
 	rm -f $(TARGET)
 
-main.o:./hdr/controller.h 
-./src/controller.o:./hdr/controller.h
+main.o:./hdr/ui.h 
+./src/ui.o:./hdr/ui.h
 ./src/pkt_parser.o:./hdr/pkt_parser.h ./hdr/protocol.h
-./src/print.o:./hdr/print.h ./hdr/protocol.h
+./src/print.o:./hdr/print.h ./hdr/pkt_parser.h ./hdr/protocol.h
 
 
