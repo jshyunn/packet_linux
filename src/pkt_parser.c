@@ -25,7 +25,7 @@ ipv4_header* getIPv4(const u_char* pkt_data)
 	return ipv4_hdr;
 }
 
-arp_header* getArp(const u_char* pkt_data)
+arp_header* getARP(const u_char* pkt_data)
 {
 	ether_header* ether_hdr = (ether_header*)pkt_data;
 	arp_header* arp_hdr = (arp_header*)malloc(sizeof(arp_header));
@@ -46,7 +46,14 @@ void releaseIPv4(ipv4_header* ipv4_hdr)
 	free(ipv4_hdr);
 }
 
-void releaseArp(arp_header* arp_hdr)
+void releaseARP(arp_header* arp_hdr)
 {
 	free(arp_hdr);
+}
+
+char* getEtherType(const ether_header* ether_hdr)
+{
+	if (ether_hdr->type == IPv4) return "IPv4";
+	if (ether_hdr->type == ARP) return "ARP";
+	return "NULL";
 }
