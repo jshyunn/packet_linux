@@ -34,9 +34,9 @@ typedef enum ether_type {
 	IPv4 = 0x0800,
 	ARP = 0x0806,
 	RARP = 0x8035,
-    VLAN = 0x8100,
+   	VLAN = 0x8100,
 	IPv6 = 0x86dd,
-    LP = 0x9000
+   	 LP = 0x9000
 } ether_type;
 
 
@@ -90,6 +90,11 @@ typedef struct icmp_header {
 	u_short sum;	   /* Checksum */
 } icmp_header;
 
+/* ICMP Type */
+typedef enum icmp_type {
+	REPLY = 0,
+	REQUEST = 8	
+} icmp_type;
 
 /* TCP Header Structure */
 typedef struct tcp_header {
@@ -99,8 +104,8 @@ typedef struct tcp_header {
 	u_int ack_num;          /* Acknowledgement number */
 	u_short hlen_flags ;    /* Header length(4bits) & Flags(12bits) */
 	u_short win_size;       /* Window size */
-	u_short sum;			/* Checksum */
-	u_short ugt_ptr;		/* Urgent Pointer*/
+	u_short sum;		/* Checksum */
+	u_short ugt_ptr;	/* Urgent Pointer*/
 } tcp_header;
 
 /* TCP Flags Type */
@@ -116,8 +121,8 @@ typedef enum tcp_flags {
 
 /* UDP Header Structure */
 typedef struct udp_header {
-	u_short sport;      /* Source port */
-	u_short dport;      /* Destination port */
-	u_short tlen;       /* Total length*/
+	u_short sport;      	/* Source port */
+	u_short dport;      	/* Destination port */
+	u_short tlen;       	/* Total length*/
 	u_short sum;		/* Checksum */
 } udp_header;

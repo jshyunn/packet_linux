@@ -4,6 +4,7 @@
 
 void printMAC(const mac_addr, const mac_addr);
 void printIP(const ip_addr, const ip_addr);
+void printIPwithPort(const ip_addr, const ip_addr, const u_char, const u_char);
 void printPkt(const struct pcap_pkthdr*, const void*);
 void printEther(const ether_header*);
 void printIPv4(const ipv4_header*);

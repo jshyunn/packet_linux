@@ -36,6 +36,44 @@ arp_header* getARP(const u_char* pkt_data)
 	return arp_hdr;
 }
 
+icmp_header* getICMP(const u_char* pkt_data)
+{
+	ether_header* ether_hdr = (ether_header*)pkt_data;
+	ipv4_header* ipv4_hdr = (ipv4_header*)(ether_hdr + 1);
+	icmp_header* icmp_hdr = (icmp_header*)malloc(sizeof(icmp_header));
+	memcpy(icmp_hdr, (icmp_header*)(ipv4_hdr + 1), sizeof(icmp_header));
+	TO_LITTLE(icmp_hdr->sum);
+	return icmp_hdr;
+}
+
+udp_header* getUDP(const u_char* pkt_data)
+{
+	ether_header* ether_hdr = (ether_header*)pkt_data;
+	ipv4_header* ipv4_hdr = (ipv4_header*)(ether_hdr + 1);
+	udp_header* udp_hdr = (udp_header*)malloc(sizeof(udp_header));
+	memcpy(udp_hdr, (icmp_header*)(ipv4_hdr + 1), sizeof(udp_header));
+	TO_LITTLE(udp_hdr->sport);
+	TO_LITTLE(udp_hdr->dport);
+	TO_LITTLE(udp_hdr->tlen);
+	TO_LITTLE(udp_hdr->sum);
+	return udp_hdr;
+}
+
+tcp_header* getTCP(const u_char* pkt_data)
+{
+	ether_header* ether_hdr = (ether_header*)pkt_data;
+	ipv4_header* ipv4_hdr = (ipv4_header*)(ether_hdr + 1);
+	tcp_header* tcp_hdr = (tcp_header*)malloc(sizeof(tcp_header));
+	memcpy(tcp_hdr, (tcp_header*)(ipv4_hdr + 1), sizeof(tcp_header));
+	TO_LITTLE(tcp_hdr->sport);
+	TO_LITTLE(tcp_hdr->dport);
+	TO_LITTLE(tcp_hdr->hlen_flags);
+	TO_LITTLE(tcp_hdr->win_size);
+	TO_LITTLE(tcp_hdr->sum);
+	TO_LITTLE(tcp_hdr->ugt_ptr);
+	return tcp_hdr;
+}
+
 void releaseEther(ether_header* ether_hdr)
 {
 	free(ether_hdr);
@@ -51,9 +89,32 @@ void releaseARP(arp_header* arp_hdr)
 	free(arp_hdr);
 }
 
+void releaseICMP(icmp_header* icmp_hdr)
+{
+	free(icmp_hdr);
+}
+
+void releaseUDP(udp_header* udp_hdr)
+{
+	free(udp_hdr);
+}
+
+void releaseTCP(tcp_header* tcp_hdr)
+{
+	free(tcp_hdr);
+}
+
 char* getEtherType(const ether_header* ether_hdr)
 {
 	if (ether_hdr->type == IPv4) return "IPv4";
 	if (ether_hdr->type == ARP) return "ARP";
+	return "NULL";
+}
+
+char* getIPv4Type(const ipv4_header* ipv4_hdr)
+{
+	if (ipv4_hdr->p == ICMP) return "ICMP";
+	if (ipv4_hdr->p == TCP) return "TCP";
+	if (ipv4_hdr->p == UDP) return "UDP";
 	return "NULL";
 }

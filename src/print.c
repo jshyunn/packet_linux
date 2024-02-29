@@ -38,6 +38,13 @@ void printIP(const ip_addr src, const ip_addr dst)
 	dst.byte1, dst.byte2, dst.byte3, dst.byte4);
 }
 
+void printIPwithPort(const ip_addr src, const ip_addr dst, const u_char sport, const u_char dport)
+{
+	printf("%d.%d.%d.%d:%d > %d.%d.%d.%d:%d ",
+	src.byte1, src.byte2, src.byte3, src.byte4, sport,
+	dst.byte1, dst.byte2, dst.byte3, dst.byte4, dport);
+}
+
 void printPkt(const struct pcap_pkthdr* pkt_hdr, const void* pkt_data)
 {
 	struct tm* ltime;
@@ -45,6 +52,7 @@ void printPkt(const struct pcap_pkthdr* pkt_hdr, const void* pkt_data)
 	time_t local_tv_sec;
 	ether_header* ether_hdr = getEther(pkt_data);
 	char ether_type[10];
+	char ip_type[10];
 
 	local_tv_sec = pkt_hdr->ts.tv_sec;
 	ltime = localtime(&local_tv_sec);
@@ -54,7 +62,33 @@ void printPkt(const struct pcap_pkthdr* pkt_hdr, const void* pkt_data)
 	if (strcmp(ether_type, "IPv4") == 0)
 	{
 		ipv4_header* ipv4_hdr = getIPv4(pkt_data);
-		printIP(ipv4_hdr->src, ipv4_hdr->dst);
+		strcpy(ip_type, getIPv4Type(ipv4_hdr));
+		u_short sport = 0;
+		u_short	dport = 0;
+		if (strcmp(ip_type, "ICMP") == 0)
+		{
+			icmp_header* icmp_hdr = getICMP(pkt_data);
+			releaseICMP(icmp_hdr);
+		}
+		else if (strcmp(ip_type, "UDP") == 0)
+		{
+			udp_header* udp_hdr = getUDP(pkt_data);
+			sport = udp_hdr->sport;
+			dport = udp_hdr->dport;
+			releaseUDP(udp_hdr);
+		}
+		else if (strcmp(ip_type, "TCP") == 0)
+		{
+			tcp_header* tcp_hdr = getTCP(pkt_data);
+			sport = tcp_hdr->sport;
+			dport = tcp_hdr->dport;
+			releaseTCP(tcp_hdr);
+		}
+		if (sport != 0)
+			printIPwithPort(ipv4_hdr->src, ipv4_hdr->dst, sport, dport);
+		else
+			printIP(ipv4_hdr->src, ipv4_hdr->dst);
+		printf("%s ", ip_type);
 		releaseIPv4(ipv4_hdr);
 	}
 	else if (strcmp(ether_type, "ARP") == 0)
@@ -108,7 +142,6 @@ void printIcmp(const icmp_header* icmp_hdr)
 
 void printTcp(const tcp_header* tcp_hdr)
 {
-	printf("SRC Port: %d -> DST Port: %d\n", tcp_hdr->sport, tcp_hdr->dport);
 	printf("Seq: %u, Ack: %u\n", tcp_hdr->seq_num, tcp_hdr->ack_num);
 	printf("Header Len: %d\n", (ntohs(tcp_hdr->hlen_flags & 0xf000) / 16 * 4));
 	printf("Flags: 0x%03x\n", (tcp_hdr->hlen_flags & 0x0fff));
@@ -119,7 +152,6 @@ void printTcp(const tcp_header* tcp_hdr)
 
 void printUdp(const udp_header* udp_hdr)
 {
-	printf("SRC Port: %d -> DST Port: %d\n", ntohs(udp_hdr->sport), ntohs(udp_hdr->dport));
 	printf("Total Length: %d\n", ntohs(udp_hdr->tlen));
 	printf("Checksum: 0x%04x\n", ntohs(udp_hdr->sum));
 }
