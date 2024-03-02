@@ -25,7 +25,7 @@ void printUsage(char* command)
 	"\t\t[ -f file ]\n" // filter
 	"\t\t[ -d file ]\n" // detection
 	"\t\t[ -s ]\n" // statistics
-    	"\t\t[ -v ]\n", // verbose
+    "\t\t[ -v ]\n", // verbose
 	command);
 }
 
@@ -93,13 +93,9 @@ int main(int argc, char* argv[])
 	const u_char* pkt_data;
 
 	while ((res = pcap_next_ex(fp, &pkt_hdr, &pkt_data)) >= 0) {
-		if (res == 0)
-			continue;
-
+		if (res == 0) continue;
 		if (pkt_hdr->len < 14) continue;
 
-		// 패킷 처리
-		// 옵션 처리
 		printPkt(pkt_hdr, pkt_data);	
 	}
 	
