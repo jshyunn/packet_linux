@@ -2,30 +2,19 @@
 #include <unistd.h>
 #include "hdr/print.h"
 #include "hdr/ui.h"
-/*
-
-+ 사용자는 잘 몰라도 사용할 수 있는 인터페이스 제공
-+ 멀티스레딩 - 캡처 중지 신호 대기
-
-1. 모드 및 옵션 선택
-2. 패킷 처리 -> 파싱된 자료 반환
-3. 반환된 자료로 옵션 수행
-4. 정지나 종료 후 저장 여부
-
-*/
 
 void printUsage(char* command)
 {
 	printf("Usage: ./%s [MODE] [OPTION]\n"
 	"\tMODE\n"
-	"\t\t[ -l ]\n" // live
-	"\t\t[ -r file ]\n" // offline
+	"\t\t[ -l ]\n" 		// live
+	"\t\t[ -r file ]\n" 	// offline
 	"\tOPTION\n"
-	"\t\t[ -w file ]\n" // write
-	"\t\t[ -f file ]\n" // filter
-	"\t\t[ -d file ]\n" // detection
-	"\t\t[ -s ]\n" // statistics
-    "\t\t[ -v ]\n", // verbose
+	"\t\t[ -w file ]\n" 	// write
+	"\t\t[ -f file ]\n" 	// filter
+	"\t\t[ -d file ]\n" 	// detection
+	"\t\t[ -s ]\n" 		// statistics
+	"\t\t[ -v ]\n", 	// verbose
 	command);
 }
 
