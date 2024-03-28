@@ -10,7 +10,7 @@ SET(CMAKE_VERBOSE_MAKEFILE true)
 SET(OUTPUT_ELF main.out) 
 SET(SRC_FILES
 	main.c
-	./src/ui.c
+	./src/option.c
 	./src/print.c
 	./src/pkt_parser.c
 )

@@ -1,21 +1,16 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
-#include "../hdr/ui.h"
+#include "../hdr/option.h"
 
-int setLive(pcap_t** fp)
+int setLive(pcap_t** fp, char* arg, char* errbuf)
 {
-	char errbuf[PCAP_ERRBUF_SIZE];
 	pcap_if_t* alldevs;
 	pcap_if_t* d;
 	int inum;
 	int i = 0;
 
-	if (pcap_findalldevs(&alldevs, errbuf) == -1)
-	{
-		fprintf(stderr, "Error: %s\n", errbuf);
-		return -1;
-	}
+	if (pcap_findalldevs(&alldevs, errbuf) == -1) return -1;
 
 	for (d = alldevs; d; d = d->next)
 	{
@@ -28,8 +23,8 @@ int setLive(pcap_t** fp)
 
 	if (i == 0)
 	{
-		printf("\nNo interfaces found! Make sure Npcap is installed.\n");
-		return 0;
+		strcpy(errbuf, "No interfaces found! Make sure libpcap is installed.");
+		return -1;
 	}
 
 	printf("Enter the interface number (1-%d): ", i);
@@ -38,7 +33,7 @@ int setLive(pcap_t** fp)
 
 	if (inum < 1 || inum > i)
 	{
-		fprintf(stderr, "\nError: Interface number out of range.\n");
+		strcpy(errbuf, "Interface number out of range.");
 		pcap_freealldevs(alldevs);
 		return -1;
 	}
@@ -53,26 +48,18 @@ int setLive(pcap_t** fp)
 							errbuf						// error buffer
 						)) == NULL)
 	{
-		fprintf(stderr, "\nError: Unable to open the adapter. %s is not supported by Npcap\n", d->name);
+		sprintf(errbuf, "Unable to open the adapter. %s is not supported by Npcap\n", d->name);
 		pcap_freealldevs(alldevs);
 		return -1;
 	}
-
-	printf("\nlistening on %s...\n", d->description);
-
+	printf("listening on %s...\n", d->description);
 	pcap_freealldevs(alldevs);
 
 	return 0;
 }
 
-int setOffline(pcap_t** fp, char* filepath)
+int setOffline(pcap_t** fp, char* filepath, char* errbuf)
 {
-	char errbuf[PCAP_ERRBUF_SIZE];
-
-	if ((*fp = pcap_open_offline(filepath, errbuf)) == NULL)
-	{
-		fprintf(stderr, "Error: %s\n", errbuf);
-		return -1;
-	}
+	if ((*fp = pcap_open_offline(filepath, errbuf)) == NULL) return -1;
 	return 0;
 }

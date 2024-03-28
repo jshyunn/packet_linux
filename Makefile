@@ -153,6 +153,33 @@ main.c.s:
 	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/main.c.s
 .PHONY : main.c.s
 
+src/option.o: src/option.c.o
+
+.PHONY : src/option.o
+
+# target to build an object file
+src/option.c.o:
+	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/option.c.o
+.PHONY : src/option.c.o
+
+src/option.i: src/option.c.i
+
+.PHONY : src/option.i
+
+# target to preprocess a source file
+src/option.c.i:
+	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/option.c.i
+.PHONY : src/option.c.i
+
+src/option.s: src/option.c.s
+
+.PHONY : src/option.s
+
+# target to generate assembly for a file
+src/option.c.s:
+	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/option.c.s
+.PHONY : src/option.c.s
+
 src/pkt_parser.o: src/pkt_parser.c.o
 
 .PHONY : src/pkt_parser.o
@@ -207,33 +234,6 @@ src/print.c.s:
 	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/print.c.s
 .PHONY : src/print.c.s
 
-src/ui.o: src/ui.c.o
-
-.PHONY : src/ui.o
-
-# target to build an object file
-src/ui.c.o:
-	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/ui.c.o
-.PHONY : src/ui.c.o
-
-src/ui.i: src/ui.c.i
-
-.PHONY : src/ui.i
-
-# target to preprocess a source file
-src/ui.c.i:
-	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/ui.c.i
-.PHONY : src/ui.c.i
-
-src/ui.s: src/ui.c.s
-
-.PHONY : src/ui.s
-
-# target to generate assembly for a file
-src/ui.c.s:
-	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/ui.c.s
-.PHONY : src/ui.c.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -246,15 +246,15 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... src/option.o"
+	@echo "... src/option.i"
+	@echo "... src/option.s"
 	@echo "... src/pkt_parser.o"
 	@echo "... src/pkt_parser.i"
 	@echo "... src/pkt_parser.s"
 	@echo "... src/print.o"
 	@echo "... src/print.i"
 	@echo "... src/print.s"
-	@echo "... src/ui.o"
-	@echo "... src/ui.i"
-	@echo "... src/ui.s"
 .PHONY : help
 
 

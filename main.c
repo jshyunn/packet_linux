@@ -1,80 +1,101 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include "hdr/print.h"
-#include "hdr/ui.h"
+#include "hdr/option.h"
 
-void printUsage(char* command)
+#define SHORTOPT "lr:w:f:d:sv"
+
+void printUsage(char* filename)
 {
 	printf("Usage: ./%s [MODE] [OPTION]\n"
 	"\tMODE\n"
-	"\t\t[ -l ]\n" 		// live
+	"\t\t[ -l ]\n" 			// live
 	"\t\t[ -r file ]\n" 	// offline
 	"\tOPTION\n"
 	"\t\t[ -w file ]\n" 	// write
 	"\t\t[ -f file ]\n" 	// filter
 	"\t\t[ -d file ]\n" 	// detection
-	"\t\t[ -s ]\n" 		// statistics
-	"\t\t[ -v ]\n", 	// verbose
-	command);
+	"\t\t[ -s ]\n" 			// statistics
+	"\t\t[ -v ]\n", 		// verbose
+	filename);
 }
 
 int main(int argc, char* argv[])
 {
-	char opt;
-	pcap_t* fp;
-
 	if (argc < 2) 
 	{
 		printUsage(argv[0]);
-		return -1;
+		exit(1);
 	}
 
-	while ((opt = getopt(argc, argv, "lr:w:f:d:sv")) != -1) {
+	int opt;
+	option u_opt;
+	char* mode_arg;
+	
+	memset(&u_opt, 0, sizeof(u_opt));
+
+	while ((opt = getopt(argc, argv, SHORTOPT)) != -1) {
 		switch (opt)
 		{
 			case 'l':
 			{
-				if (setLive(&fp) == -1)
-					return -1;
+				++u_opt.lflag;
+				u_opt.setMode = setLive;
 				break;
 			}
 			case 'r':
 			{
-				if (setOffline(&fp, optarg) == -1)
-					return -1;
+				++u_opt.rflag;
+				u_opt.setMode = setOffline;
+				mode_arg = optarg;
 				break;
 			}
 			case 'w':
 			{
-				//setWrite
+				++u_opt.wflag;
 				break;
 			}
 			case 'f':
 			{
-				//setFilterRule
+				++u_opt.fflag;
 				break;
 			}
 			case 'd':
 			{
-				//setDetectionRule
+				++u_opt.dflag;
 				break;
 			}
 			case 'v':
 			{
-				//setVerbose
+				++u_opt.vflag;
 				break;
 			}
 			case 's':
 			{
-				//setStatistics
+				++u_opt.sflag;
 				break;
 			}
 			default:
 			{
 				printUsage(argv[0]);
-				return -1;
+				exit(1);
 			}
 		}
+	}
+
+	if (u_opt.lflag && u_opt.rflag) {
+		fputs("Error: -l and -r are mutually exclusive.\n", stderr);
+		exit(1);
+	}
+
+	pcap_t* fp;
+	char errbuf[PCAP_ERRBUF_SIZE];
+
+	if (u_opt.setMode(&fp, mode_arg, errbuf) == -1) {
+		fprintf(stderr, "Error: %s\n", errbuf);
+		exit(1);
 	}
 
 	int res;
@@ -90,9 +111,9 @@ int main(int argc, char* argv[])
 	
 	if (res == -1) {
 		fprintf(stderr, "Error: %s\n", pcap_geterr(fp));
-		return -1;
+		exit(1);
 	}
 
 	pcap_close(fp);
-	return 0;
+	exit(0);
 }
