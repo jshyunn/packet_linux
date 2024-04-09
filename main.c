@@ -89,6 +89,10 @@ int main(int argc, char* argv[])
 		fputs("Error: -l and -r are mutually exclusive.\n", stderr);
 		exit(1);
 	}
+	if (u_opt.lflag && mode_arg) {
+		fputs("Error: -l option has arguments.\n", stderr);
+		exit(1);
+	}
 
 	pcap_t* fp;
 	char errbuf[PCAP_ERRBUF_SIZE];

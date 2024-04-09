@@ -30,12 +30,22 @@ const typemap ipv4_type_map[] = {
 	{ 8,	"EGP" },
 	{ 17,	"UDP" },
 	{ 89,	"OSPF" },
-	{ 0,	"NULL" },
+};
+
+const funcmap arp_func_map[] = {
+	//{ 0,	"Reserved" },
+	{ 1,	getARPReqInfo },
+	{ 2,	getARPRepInfo },
+	//{ 3,	"request Reverse" },
+	//{ 4,	"reply Reverse" },
 };
 
 void print(print_info pi)
 {
-	printf("%s %s %s > %s length: %d\n", pi.time, pi.protocol, pi.src, pi.dst, pi.len);
+	printf("%s %s %s > %s length: %d", pi.time, pi.protocol, pi.src, pi.dst, pi.len);
+	if (strcmp(pi.info, ""))
+		printf(" info: %s", pi.info);
+	puts("");
 }
 
 void getPrintInfo(print_info* pi, const struct pcap_pkthdr* pkt_hdr, const u_char* pkt_data)
@@ -65,10 +75,15 @@ void getEtherInfo(print_info* pi, const u_char* pkt_data)
 	mactostr(src, sizeof(src), ether_hdr->src);
 	mactostr(dst, sizeof(dst), ether_hdr->dst);
 	strcpy(pi->src, src);
+	if (strcmp(dst, "ff:ff:ff:ff:ff:ff") == 0)
+		strcpy(dst, "Broadcast");
 	strcpy(pi->dst, dst);
 
+	strcpy(pi->info, "");
 	if (strcmp(pi->protocol, "IPv4") == 0)
 		getIPv4Info(pi, pkt_data + sizeof(ether_header));
+	if (strcmp(pi->protocol, "ARP") == 0)
+		getARPInfo(pi, pkt_data + sizeof(ether_header));
 }
 
 void getIPv4Info(print_info* pi, const u_char* pkt_data)
@@ -88,6 +103,34 @@ void getIPv4Info(print_info* pi, const u_char* pkt_data)
 	iptostr(dst, sizeof(dst), ipv4_hdr->dst);
 	strcpy(pi->src, src);
 	strcpy(pi->dst, dst);
+}
+
+void getARPInfo(print_info* pi, const u_char* pkt_data)
+{
+	arp_header* arp_hdr = (arp_header*)pkt_data;
+	const funcmap* fm;
+
+	for (fm = arp_func_map; fm->val; ++fm)
+		if (fm->val == ntohs(arp_hdr->op)) {
+			fm->func(pi, arp_hdr);
+			break;
+		}
+}
+
+void getARPReqInfo(print_info* pi, arp_header* arp_hdr)
+{
+	char src[16];
+	char dst[16];
+	iptostr(src, sizeof(src), arp_hdr->spa);
+	iptostr(dst, sizeof(dst), arp_hdr->dpa);
+	snprintf(pi->info, sizeof(pi->info), "Who has %s? Tell %s", dst, src);
+}
+
+void getARPRepInfo(print_info* pi, arp_header* arp_hdr)
+{
+	char buf[16];
+	iptostr(buf, sizeof(buf), arp_hdr->spa);
+	snprintf(pi->info, sizeof(pi->info), "%s is at %s", buf, pi->src);
 }
 
 

@@ -22,29 +22,12 @@ typedef struct mac_addr {
 } mac_addr;
 
 
-
-typedef struct typemap {
-	u_int val;
-	const char* str;
-} typemap;
-
-
 /* Ethernet Header Structure */
 typedef struct ether_header {
 	mac_addr dst;   /* Destination MAC address */
 	mac_addr src;   /* Source MAC address */
 	u_short type;   /* Type */
 } ether_header;
-
-/* Type Field */
-typedef enum ether_type {
-	IPv4 = 0x0800,
-	ARP = 0x0806,
-	RARP = 0x8035,
-   	VLAN = 0x8100,
-	IPv6 = 0x86dd,
-   	LP = 0x9000
-} ether_type;
 
 
 /* IP Header Structure */
@@ -68,17 +51,10 @@ typedef struct ipv4_header {
 	ip_addr dst;    /* Destination address */
 } ipv4_header;
 
-/* Type Field */
-typedef enum ipv4_type {
-	ICMP = 0x01,
-	TCP = 0x06,
-	UDP = 0x11
-} ipv4_type;
-
 
 /* ARP Structure */
 typedef struct arp_header {
-	u_short hard;   /*Hardware type */
+	u_short hard;   /* Hardware type */
 	u_short pro;    /* Protocol type */
 	u_char hlen;    /* Hardware address length */
 	u_char plen;    /* Protocol address length */
@@ -97,11 +73,6 @@ typedef struct icmp_header {
 	u_short sum;	   /* Checksum */
 } icmp_header;
 
-/* ICMP Type */
-typedef enum icmp_type {
-	REPLY = 0,
-	REQUEST = 8	
-} icmp_type;
 
 /* TCP Header Structure */
 typedef struct tcp_header {
