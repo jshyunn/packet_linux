@@ -2,13 +2,16 @@
 
 #include "protocol.h"
 
-void printMAC(const mac_addr, const mac_addr);
-void printIP(const ip_addr, const ip_addr);
-void printIPwithPort(const ip_addr, const ip_addr, const u_char, const u_char);
-void printPkt(const struct pcap_pkthdr*, const void*);
-void printEther(const ether_header*);
-void printIPv4(const ipv4_header*);
-void printARP(const arp_header*);
-void printICMP(const icmp_header*);
-void printTCP(const tcp_header*);
-void printUDP(const udp_header*);
+typedef struct print_info {
+    char time[16];
+    char protocol[20];
+    char src[20];
+    char dst[20];
+    int len;
+} print_info;
+
+void print(print_info);
+
+void getPrintInfo(print_info*, const struct pcap_pkthdr*, const u_char*);
+void getEtherInfo(print_info*, const u_char*);
+void getIPv4Info(print_info*, const u_char*);

@@ -16,9 +16,9 @@ void printUsage(char* filename)
 	"\tOPTION\n"
 	"\t\t[ -w file ]\n" 	// write
 	"\t\t[ -f file ]\n" 	// filter
-	"\t\t[ -d file ]\n" 	// detection
-	"\t\t[ -s ]\n" 			// statistics
-	"\t\t[ -v ]\n", 		// verbose
+	"\t\t[ -d file ]\n" 	// detection(ui)
+	"\t\t[ -s ]\n" 			// statistics(ui)
+	"\t\t[ -v ]\n", 		// verbose(ui)
 	filename);
 }
 
@@ -101,12 +101,14 @@ int main(int argc, char* argv[])
 	int res;
 	struct pcap_pkthdr* pkt_hdr;
 	const u_char* pkt_data;
+	print_info pi;
 
 	while ((res = pcap_next_ex(fp, &pkt_hdr, &pkt_data)) >= 0) {
 		if (res == 0) continue;
 		if (pkt_hdr->len < 14) continue;
 
-		printPkt(pkt_hdr, pkt_data);	
+		getPrintInfo(&pi, pkt_hdr, pkt_data);
+		print(pi);	
 	}
 	
 	if (res == -1) {

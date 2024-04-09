@@ -2,10 +2,96 @@
 #include <string.h>
 
 #include "../hdr/print.h"
-#include "../hdr/pkt_parser.h"
+#include "../hdr/utils.h"
 
-#define TYPELEN 10
+const typemap ether_type_map[] = {
+	{ 0x0600,	"Xerox XNS IDP" },
+	{ 0x0800,	"IPv4" },
+	{ 0x0805,	"X.25" },
+	{ 0x0806,	"ARP" },
+	{ 0x0835,	"RARP" },
+	{ 0x6003,	"DEC DECnet Phase IV" },
+	{ 0x8100,	"VLAN ID" },
+	{ 0x8137,	"Novell Netware IPX" },
+	{ 0x8191,	"NetBIOS" },
+	{ 0x86dd,	"IPv6" },
+	{ 0x8847,	"MPLS" },
+	{ 0x8863,	"PPPoE Discovery Stage" },
+	{ 0x8864,	"PPPoE PPP Session Stage" },
+	{ 0x888E,	"IEEE 802.1X" },
+	{ 0x88CC,	"LLDP" },
+	{ 0,		"NULL" },
+};
 
+const typemap ipv4_type_map[] = {
+	{ 1,	"ICMP" },
+	{ 2,	"IGMP" },
+	{ 6,	"TCP" },
+	{ 8,	"EGP" },
+	{ 17,	"UDP" },
+	{ 89,	"OSPF" },
+	{ 0,	"NULL" },
+};
+
+void print(print_info pi)
+{
+	printf("%s %s %s > %s length: %d\n", pi.time, pi.protocol, pi.src, pi.dst, pi.len);
+}
+
+void getPrintInfo(print_info* pi, const struct pcap_pkthdr* pkt_hdr, const u_char* pkt_data)
+{
+	struct tm* ltime;
+	ltime = localtime(&pkt_hdr->ts.tv_sec);
+	snprintf(pi->time, sizeof(pi->time), "%02d:%02d:%02d.%06ld",
+		ltime->tm_hour, ltime->tm_min, ltime->tm_sec, pkt_hdr->ts.tv_usec);
+	pi->len = pkt_hdr->caplen;
+	getEtherInfo(pi, pkt_data);	
+}
+
+void getEtherInfo(print_info* pi, const u_char* pkt_data)
+{
+	ether_header* ether_hdr = (ether_header*)pkt_data;
+	const typemap* tm;
+	char src[18];
+	char dst[18];
+
+	strcpy(pi->protocol, "NULL");
+	for (tm = ether_type_map; tm->val; ++tm)
+		if (tm->val == ntohs(ether_hdr->type)) {
+			strcpy(pi->protocol, tm->str);
+			break;
+		}
+
+	mactostr(src, sizeof(src), ether_hdr->src);
+	mactostr(dst, sizeof(dst), ether_hdr->dst);
+	strcpy(pi->src, src);
+	strcpy(pi->dst, dst);
+
+	if (strcmp(pi->protocol, "IPv4") == 0)
+		getIPv4Info(pi, pkt_data + sizeof(ether_header));
+}
+
+void getIPv4Info(print_info* pi, const u_char* pkt_data)
+{
+	ipv4_header* ipv4_hdr = (ipv4_header*)pkt_data;
+	const typemap* tm;
+	char src[16];
+	char dst[16];
+
+	for (tm = ipv4_type_map; tm->val; ++tm)
+		if (tm->val == ipv4_hdr->p) {
+			strcpy(pi->protocol, tm->str);
+			break;
+		}
+
+	iptostr(src, sizeof(src), ipv4_hdr->src);
+	iptostr(dst, sizeof(dst), ipv4_hdr->dst);
+	strcpy(pi->src, src);
+	strcpy(pi->dst, dst);
+}
+
+
+/*
 int printStatistics(const struct pcap_pkthdr* header)
 {
 	double now_sec = 0, prev_sec = 0, bytes = 0;
@@ -22,78 +108,6 @@ int printStatistics(const struct pcap_pkthdr* header)
 	cnt++;
 	bytes += header->caplen;
 	printf("\nNo: %d\tPps: %d\tBps: %f MB/s", idx, cnt, bytes / 1000);
-}
-
-void printMAC(const mac_addr src, const mac_addr dst)
-{
-	printf("%02x:%02x:%02x:%02x:%02x:%02x > %02x:%02x:%02x:%02x:%02x:%02x ",
-	src.byte1, src.byte2, src.byte3, 
-	src.byte4, src.byte5, src.byte6,
-	dst.byte1, dst.byte2, dst.byte3, 
-	dst.byte4, dst.byte5, dst.byte6);
-}
-
-void printIP(const ip_addr src, const ip_addr dst)
-{
-	printf("%d.%d.%d.%d > %d.%d.%d.%d ",
-	src.byte1, src.byte2, src.byte3, src.byte4,
-	dst.byte1, dst.byte2, dst.byte3, dst.byte4);
-}
-
-void printIPwithPort(const ip_addr src, const ip_addr dst, const u_char sport, const u_char dport)
-{
-	printf("%d.%d.%d.%d:%d > %d.%d.%d.%d:%d ",
-	src.byte1, src.byte2, src.byte3, src.byte4, sport,
-	dst.byte1, dst.byte2, dst.byte3, dst.byte4, dport);
-}
-
-void printPkt(const struct pcap_pkthdr* pkt_hdr, const void* pkt_data)
-{
-	struct tm* ltime;
-	char timesec[9];
-	time_t local_tv_sec;
-	ether_header* ether_hdr = getEther(pkt_data);
-	char ether_type[TYPELEN];
-	char ip_type[TYPELEN];
-
-	local_tv_sec = pkt_hdr->ts.tv_sec;
-	ltime = localtime(&local_tv_sec);
-	strftime(timesec, sizeof timesec, "%H:%M:%S", ltime);
-	strcpy(ether_type, getEtherType(ether_hdr));
-	printf("%s.%ld %s ", timesec, pkt_hdr->ts.tv_usec, ether_type);
-	if (strcmp(ether_type, "IPv4") == 0)
-	{
-		ipv4_header* ipv4_hdr = getIPv4(pkt_data);
-		strcpy(ip_type, getIPv4Type(ipv4_hdr));
-		if (strcmp(ip_type, "ICMP") == 0)
-		{
-			icmp_header* icmp_hdr = getICMP(pkt_data);
-			printIP(ipv4_hdr->src, ipv4_hdr->dst);
-			releaseICMP(icmp_hdr);
-		}
-		else if (strcmp(ip_type, "UDP") == 0)
-		{
-			udp_header* udp_hdr = getUDP(pkt_data);
-			printIPwithPort(ipv4_hdr->src, ipv4_hdr->dst, udp_hdr->sport, udp_hdr->dport);
-			releaseUDP(udp_hdr);
-		}
-		else if (strcmp(ip_type, "TCP") == 0)
-		{
-			tcp_header* tcp_hdr = getTCP(pkt_data);
-			printIPwithPort(ipv4_hdr->src, ipv4_hdr->dst, tcp_hdr->sport, tcp_hdr->dport);
-			releaseTCP(tcp_hdr);
-		}
-		printf("%s ", ip_type);
-		releaseIPv4(ipv4_hdr);
-	}
-	else if (strcmp(ether_type, "ARP") == 0)
-	{
-		arp_header* arp_hdr = getARP(pkt_data);
-		printMAC(arp_hdr->sha, arp_hdr->dha);
-		releaseARP(arp_hdr);
-	}
-	printf("length %d\n", pkt_hdr->caplen);
-	releaseEther(ether_hdr);
 }
 
 void printEther(const ether_header* ether_hdr)
@@ -149,4 +163,4 @@ void printUdp(const udp_header* udp_hdr)
 {
 	printf("Total Length: %d\n", ntohs(udp_hdr->tlen));
 	printf("Checksum: 0x%04x\n", ntohs(udp_hdr->sum));
-}
+}*/

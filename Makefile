@@ -180,33 +180,6 @@ src/option.c.s:
 	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/option.c.s
 .PHONY : src/option.c.s
 
-src/pkt_parser.o: src/pkt_parser.c.o
-
-.PHONY : src/pkt_parser.o
-
-# target to build an object file
-src/pkt_parser.c.o:
-	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/pkt_parser.c.o
-.PHONY : src/pkt_parser.c.o
-
-src/pkt_parser.i: src/pkt_parser.c.i
-
-.PHONY : src/pkt_parser.i
-
-# target to preprocess a source file
-src/pkt_parser.c.i:
-	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/pkt_parser.c.i
-.PHONY : src/pkt_parser.c.i
-
-src/pkt_parser.s: src/pkt_parser.c.s
-
-.PHONY : src/pkt_parser.s
-
-# target to generate assembly for a file
-src/pkt_parser.c.s:
-	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/pkt_parser.c.s
-.PHONY : src/pkt_parser.c.s
-
 src/print.o: src/print.c.o
 
 .PHONY : src/print.o
@@ -234,6 +207,33 @@ src/print.c.s:
 	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/print.c.s
 .PHONY : src/print.c.s
 
+src/utils.o: src/utils.c.o
+
+.PHONY : src/utils.o
+
+# target to build an object file
+src/utils.c.o:
+	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/utils.c.o
+.PHONY : src/utils.c.o
+
+src/utils.i: src/utils.c.i
+
+.PHONY : src/utils.i
+
+# target to preprocess a source file
+src/utils.c.i:
+	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/utils.c.i
+.PHONY : src/utils.c.i
+
+src/utils.s: src/utils.c.s
+
+.PHONY : src/utils.s
+
+# target to generate assembly for a file
+src/utils.c.s:
+	$(MAKE) -f CMakeFiles/main.out.dir/build.make CMakeFiles/main.out.dir/src/utils.c.s
+.PHONY : src/utils.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -249,12 +249,12 @@ help:
 	@echo "... src/option.o"
 	@echo "... src/option.i"
 	@echo "... src/option.s"
-	@echo "... src/pkt_parser.o"
-	@echo "... src/pkt_parser.i"
-	@echo "... src/pkt_parser.s"
 	@echo "... src/print.o"
 	@echo "... src/print.i"
 	@echo "... src/print.s"
+	@echo "... src/utils.o"
+	@echo "... src/utils.i"
+	@echo "... src/utils.s"
 .PHONY : help
 
 

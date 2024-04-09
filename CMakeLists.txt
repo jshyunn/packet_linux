@@ -12,7 +12,7 @@ SET(SRC_FILES
 	main.c
 	./src/option.c
 	./src/print.c
-	./src/pkt_parser.c
+	./src/utils.c
 )
 
 SET(CMAKE_C_COMPLIER "gcc")

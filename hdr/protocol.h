@@ -22,6 +22,13 @@ typedef struct mac_addr {
 } mac_addr;
 
 
+
+typedef struct typemap {
+	u_int val;
+	const char* str;
+} typemap;
+
+
 /* Ethernet Header Structure */
 typedef struct ether_header {
 	mac_addr dst;   /* Destination MAC address */
@@ -36,7 +43,7 @@ typedef enum ether_type {
 	RARP = 0x8035,
    	VLAN = 0x8100,
 	IPv6 = 0x86dd,
-   	 LP = 0x9000
+   	LP = 0x9000
 } ether_type;
 
 
@@ -63,9 +70,9 @@ typedef struct ipv4_header {
 
 /* Type Field */
 typedef enum ipv4_type {
-	ICMP = 0x0001,
-	TCP = 0x0006,
-	UDP = 0x0011
+	ICMP = 0x01,
+	TCP = 0x06,
+	UDP = 0x11
 } ipv4_type;
 
 
