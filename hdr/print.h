@@ -23,10 +23,10 @@ typedef struct funcmap {
 
 void print(print_info);
 
-void getPrintInfo(print_info*, const struct pcap_pkthdr*, const u_char*);
-void getEtherInfo(print_info*, const u_char*);
-void getIPv4Info(print_info*, const u_char*);
-void getARPInfo(print_info*, const u_char*);
-void getARPReqInfo(print_info*, arp_header*);
-void getARPRepInfo(print_info*, arp_header*);
-void getSTPInfo(print_info*, const u_char*);
+void setPrintInfo(print_info*, const struct pcap_pkthdr*, const u_char*);
+void setEtherInfo(print_info*, const u_char*);
+void setIPv4Info(print_info*, const u_char*);
+void setARPInfo(print_info*, const u_char*);
+void setARPReqInfo(print_info*, arp_header*);
+void setARPRepInfo(print_info*, arp_header*);
+void setSTPInfo(print_info*, const u_char*);

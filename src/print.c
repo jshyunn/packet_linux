@@ -37,8 +37,8 @@ const typemap ipv4_type_map[] = {
 
 const funcmap arp_func_map[] = {
 	//{ 0,	"Reserved" },
-	{ 1,	getARPReqInfo },
-	{ 2,	getARPRepInfo },
+	{ 1,	setARPReqInfo },
+	{ 2,	setARPRepInfo },
 	//{ 3,	"request Reverse" },
 	//{ 4,	"reply Reverse" },
 };
@@ -51,7 +51,7 @@ void print(print_info pi)
 	puts("");
 }
 
-void getPrintInfo(print_info* pi, const struct pcap_pkthdr* pkt_hdr, const u_char* pkt_data)
+void setPrintInfo(print_info* pi, const struct pcap_pkthdr* pkt_hdr, const u_char* pkt_data)
 {
 	struct tm* ltime;
 
@@ -59,10 +59,10 @@ void getPrintInfo(print_info* pi, const struct pcap_pkthdr* pkt_hdr, const u_cha
 	snprintf(pi->time, sizeof(pi->time), "%02d:%02d:%02d.%06ld",
 		ltime->tm_hour, ltime->tm_min, ltime->tm_sec, pkt_hdr->ts.tv_usec);
 	pi->len = pkt_hdr->caplen;
-	getEtherInfo(pi, pkt_data);	
+	setEtherInfo(pi, pkt_data);	
 }
 
-void getEtherInfo(print_info* pi, const u_char* pkt_data)
+void setEtherInfo(print_info* pi, const u_char* pkt_data)
 {
 	const typemap* tm;
 	char src[18];
@@ -93,14 +93,14 @@ void getEtherInfo(print_info* pi, const u_char* pkt_data)
 	strcpy(pi->info, "");
 
 	if (strcmp(pi->protocol, "IPv4") == 0)
-		getIPv4Info(pi, pkt_data + sizeof(ether_header));
+		setIPv4Info(pi, pkt_data + sizeof(ether_header));
 	if (strcmp(pi->protocol, "ARP") == 0)
-		getARPInfo(pi, pkt_data + sizeof(ether_header));
+		setARPInfo(pi, pkt_data + sizeof(ether_header));
 	if (strcmp(pi->protocol, "STP") == 0)
-		getSTPInfo(pi, pkt_data + sizeof(ether_header));
+		setSTPInfo(pi, pkt_data + sizeof(ether_header));
 }
 
-void getIPv4Info(print_info* pi, const u_char* pkt_data)
+void setIPv4Info(print_info* pi, const u_char* pkt_data)
 {
 	const typemap* tm;
 	char src[16];
@@ -123,7 +123,7 @@ void getIPv4Info(print_info* pi, const u_char* pkt_data)
 	strcpy(pi->dst, dst);
 }
 
-void getARPInfo(print_info* pi, const u_char* pkt_data)
+void setARPInfo(print_info* pi, const u_char* pkt_data)
 {
 	const funcmap* fm;
 
@@ -136,7 +136,7 @@ void getARPInfo(print_info* pi, const u_char* pkt_data)
 		}
 }
 
-void getARPReqInfo(print_info* pi, arp_header* arp_hdr)
+void setARPReqInfo(print_info* pi, arp_header* arp_hdr)
 {
 	char src[16];
 	char dst[16];
@@ -147,7 +147,7 @@ void getARPReqInfo(print_info* pi, arp_header* arp_hdr)
 	snprintf(pi->info, sizeof(pi->info), "Who has %s? Tell %s", dst, src);
 }
 
-void getARPRepInfo(print_info* pi, arp_header* arp_hdr)
+void setARPRepInfo(print_info* pi, arp_header* arp_hdr)
 {
 	char buf[16];
 
@@ -156,7 +156,7 @@ void getARPRepInfo(print_info* pi, arp_header* arp_hdr)
 	snprintf(pi->info, sizeof(pi->info), "%s is at %s", buf, pi->src);
 }
 
-void getSTPInfo(print_info* pi, const u_char* pkt_data)
+void setSTPInfo(print_info* pi, const u_char* pkt_data)
 {
 	llc_stp_tcn_header* stp_hdr = (llc_stp_tcn_header*)pkt_data;
 

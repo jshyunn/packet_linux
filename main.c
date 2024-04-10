@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
 		if (res == 0) continue;
 		if (pkt_hdr->len < 14) continue;
 		
-		getPrintInfo(&pi, pkt_hdr, pkt_data);
+		setPrintInfo(&pi, pkt_hdr, pkt_data);
 		print(pi);	
 	}
 	
