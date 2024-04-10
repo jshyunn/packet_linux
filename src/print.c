@@ -4,6 +4,9 @@
 #include "../hdr/print.h"
 #include "../hdr/utils.h"
 
+#define Broadcast "ff:ff:ff:ff:ff:ff"
+#define STP "01:80:c2:00:00:00"
+
 const typemap ether_type_map[] = {
 	{ 0x0600,	"Xerox XNS IDP" },
 	{ 0x0800,	"IPv4" },
@@ -65,21 +68,28 @@ void getEtherInfo(print_info* pi, const u_char* pkt_data)
 	char src[18];
 	char dst[18];
 
+	mactostr(src, sizeof(src), ether_hdr->src);
+	mactostr(dst, sizeof(dst), ether_hdr->dst);
+
+	// set protocol
 	strcpy(pi->protocol, "NULL");
 	for (tm = ether_type_map; tm->val; ++tm)
 		if (tm->val == ntohs(ether_hdr->type)) {
 			strcpy(pi->protocol, tm->str);
 			break;
 		}
+	if (strcmp(dst, STP) == 0)
+		strcpy(pi->protocol, "STP");
 
-	mactostr(src, sizeof(src), ether_hdr->src);
-	mactostr(dst, sizeof(dst), ether_hdr->dst);
-	strcpy(pi->src, src);
-	if (strcmp(dst, "ff:ff:ff:ff:ff:ff") == 0)
+	// set src, dst addr
+	if (strcmp(dst, Broadcast) == 0)
 		strcpy(dst, "Broadcast");
+	strcpy(pi->src, src);
 	strcpy(pi->dst, dst);
 
+	// set info
 	strcpy(pi->info, "");
+
 	if (strcmp(pi->protocol, "IPv4") == 0)
 		getIPv4Info(pi, pkt_data + sizeof(ether_header));
 	if (strcmp(pi->protocol, "ARP") == 0)
@@ -93,14 +103,17 @@ void getIPv4Info(print_info* pi, const u_char* pkt_data)
 	char src[16];
 	char dst[16];
 
+	iptostr(src, sizeof(src), ipv4_hdr->src);
+	iptostr(dst, sizeof(dst), ipv4_hdr->dst);
+
+	// set protocol
 	for (tm = ipv4_type_map; tm->val; ++tm)
 		if (tm->val == ipv4_hdr->p) {
 			strcpy(pi->protocol, tm->str);
 			break;
 		}
 
-	iptostr(src, sizeof(src), ipv4_hdr->src);
-	iptostr(dst, sizeof(dst), ipv4_hdr->dst);
+	// set src, dst addr
 	strcpy(pi->src, src);
 	strcpy(pi->dst, dst);
 }
