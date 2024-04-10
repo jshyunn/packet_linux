@@ -9,8 +9,6 @@ typedef struct option {
     int lflag;
     int rflag;
     int wflag;
-    int fflag;
-    int dflag;
     int sflag;
     int vflag;
 } option;

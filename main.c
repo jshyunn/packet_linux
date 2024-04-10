@@ -5,20 +5,18 @@
 #include "hdr/print.h"
 #include "hdr/option.h"
 
-#define SHORTOPT "lr:w:f:d:sv"
+#define SHORTOPT "lr:w:sv"
 
 void printUsage(char* filename)
 {
-	printf("Usage: ./%s [MODE] [OPTION]\n"
+	printf("Usage: %s [MODE] [OPTION]\n"
 	"\tMODE\n"
 	"\t\t[ -l ]\n" 			// live
 	"\t\t[ -r file ]\n" 	// offline
 	"\tOPTION\n"
 	"\t\t[ -w file ]\n" 	// write
-	"\t\t[ -f file ]\n" 	// filter
-	"\t\t[ -d file ]\n" 	// detection(ui)
-	"\t\t[ -s ]\n" 			// statistics(ui)
-	"\t\t[ -v ]\n", 		// verbose(ui)
+	"\t\t[ -s ]\n" 			// statistics
+	"\t\t[ -v ]\n", 		// verbose
 	filename);
 }
 
@@ -57,16 +55,6 @@ int main(int argc, char* argv[])
 				++u_opt.wflag;
 				break;
 			}
-			case 'f':
-			{
-				++u_opt.fflag;
-				break;
-			}
-			case 'd':
-			{
-				++u_opt.dflag;
-				break;
-			}
 			case 'v':
 			{
 				++u_opt.vflag;
@@ -89,10 +77,6 @@ int main(int argc, char* argv[])
 		fputs("Error: -l and -r are mutually exclusive.\n", stderr);
 		exit(1);
 	}
-	if (u_opt.lflag && mode_arg) {
-		fputs("Error: -l option has arguments.\n", stderr);
-		exit(1);
-	}
 
 	pcap_t* fp;
 	char errbuf[PCAP_ERRBUF_SIZE];
@@ -110,7 +94,7 @@ int main(int argc, char* argv[])
 	while ((res = pcap_next_ex(fp, &pkt_hdr, &pkt_data)) >= 0) {
 		if (res == 0) continue;
 		if (pkt_hdr->len < 14) continue;
-
+		
 		getPrintInfo(&pi, pkt_hdr, pkt_data);
 		print(pi);	
 	}
