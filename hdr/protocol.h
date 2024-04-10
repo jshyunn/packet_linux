@@ -30,6 +30,41 @@ typedef struct ether_header {
 } ether_header;
 
 
+/* LLC STP Configuration BPDUs Header Structure */
+#pragma pack(push, 1)
+typedef struct llc_stp_conf_header {
+	u_char dsap;
+	u_char ssap;
+	u_char ctl_field;
+	u_short prot_id;
+	u_char prot_ver_id;
+	u_char bpdu_type;
+	u_char flags;
+	u_short root_prior;
+	mac_addr root_id;
+	u_int cost;
+	u_short bri_prior;
+	mac_addr bri_id;
+	u_short port;
+	u_short msg_age;
+	u_short max_age;
+	u_short hello_time;
+	u_short for_delay;
+} llc_stp_conf_header;
+
+
+/* LLC STP Configuration BPDUs Header Structure */
+typedef struct llc_stp_tcn_header {
+	u_char dsap;
+	u_char ssap;
+	u_char ctl_field;
+	u_short prot_id;
+	u_char prot_ver_id;
+	u_char bpdu_type;
+} llc_stp_tcn_header;
+#pragma pack(pop)
+
+
 /* IP Header Structure */
 typedef struct ipv4_header {
 #if __BYTE_ORDER == __LITTLE_ENDIAN

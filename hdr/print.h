@@ -8,7 +8,7 @@ typedef struct print_info {
     char src[20];
     char dst[20];
     int len;
-    char info[50];
+    char info[100];
 } print_info;
 
 typedef struct typemap {
@@ -29,3 +29,4 @@ void getIPv4Info(print_info*, const u_char*);
 void getARPInfo(print_info*, const u_char*);
 void getARPReqInfo(print_info*, arp_header*);
 void getARPRepInfo(print_info*, arp_header*);
+void getSTPInfo(print_info*, const u_char*);

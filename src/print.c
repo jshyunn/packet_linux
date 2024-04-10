@@ -54,6 +54,7 @@ void print(print_info pi)
 void getPrintInfo(print_info* pi, const struct pcap_pkthdr* pkt_hdr, const u_char* pkt_data)
 {
 	struct tm* ltime;
+
 	ltime = localtime(&pkt_hdr->ts.tv_sec);
 	snprintf(pi->time, sizeof(pi->time), "%02d:%02d:%02d.%06ld",
 		ltime->tm_hour, ltime->tm_min, ltime->tm_sec, pkt_hdr->ts.tv_usec);
@@ -63,10 +64,11 @@ void getPrintInfo(print_info* pi, const struct pcap_pkthdr* pkt_hdr, const u_cha
 
 void getEtherInfo(print_info* pi, const u_char* pkt_data)
 {
-	ether_header* ether_hdr = (ether_header*)pkt_data;
 	const typemap* tm;
 	char src[18];
 	char dst[18];
+
+	ether_header* ether_hdr = (ether_header*)pkt_data;
 
 	mactostr(src, sizeof(src), ether_hdr->src);
 	mactostr(dst, sizeof(dst), ether_hdr->dst);
@@ -94,14 +96,17 @@ void getEtherInfo(print_info* pi, const u_char* pkt_data)
 		getIPv4Info(pi, pkt_data + sizeof(ether_header));
 	if (strcmp(pi->protocol, "ARP") == 0)
 		getARPInfo(pi, pkt_data + sizeof(ether_header));
+	if (strcmp(pi->protocol, "STP") == 0)
+		getSTPInfo(pi, pkt_data + sizeof(ether_header));
 }
 
 void getIPv4Info(print_info* pi, const u_char* pkt_data)
 {
-	ipv4_header* ipv4_hdr = (ipv4_header*)pkt_data;
 	const typemap* tm;
 	char src[16];
 	char dst[16];
+
+	ipv4_header* ipv4_hdr = (ipv4_header*)pkt_data;
 
 	iptostr(src, sizeof(src), ipv4_hdr->src);
 	iptostr(dst, sizeof(dst), ipv4_hdr->dst);
@@ -120,8 +125,9 @@ void getIPv4Info(print_info* pi, const u_char* pkt_data)
 
 void getARPInfo(print_info* pi, const u_char* pkt_data)
 {
-	arp_header* arp_hdr = (arp_header*)pkt_data;
 	const funcmap* fm;
+
+	arp_header* arp_hdr = (arp_header*)pkt_data;
 
 	for (fm = arp_func_map; fm->val; ++fm)
 		if (fm->val == ntohs(arp_hdr->op)) {
@@ -134,18 +140,43 @@ void getARPReqInfo(print_info* pi, arp_header* arp_hdr)
 {
 	char src[16];
 	char dst[16];
+
 	iptostr(src, sizeof(src), arp_hdr->spa);
 	iptostr(dst, sizeof(dst), arp_hdr->dpa);
+
 	snprintf(pi->info, sizeof(pi->info), "Who has %s? Tell %s", dst, src);
 }
 
 void getARPRepInfo(print_info* pi, arp_header* arp_hdr)
 {
 	char buf[16];
+
 	iptostr(buf, sizeof(buf), arp_hdr->spa);
+
 	snprintf(pi->info, sizeof(pi->info), "%s is at %s", buf, pi->src);
 }
 
+void getSTPInfo(print_info* pi, const u_char* pkt_data)
+{
+	llc_stp_tcn_header* stp_hdr = (llc_stp_tcn_header*)pkt_data;
+
+	if (stp_hdr->bpdu_type == 0x00) {// Configuration BPDUs
+		char root_id_buf[18];
+		char root_id[30];
+		
+		llc_stp_conf_header* stp_hdr = (llc_stp_conf_header*)pkt_data;
+
+		mactostr(root_id_buf, sizeof(root_id_buf), stp_hdr->root_id);
+
+		snprintf(root_id, sizeof(root_id), "%d/%x/%s", 
+			ntohs(stp_hdr->root_prior), stp_hdr->root_prior >> 8, root_id_buf);
+
+		snprintf(pi->info, sizeof(pi->info), "Conf. Root = %s Cost = %d Port = 0x%04x",
+			root_id, ntohs(stp_hdr->cost), ntohs(stp_hdr->port));
+	}
+	else if (stp_hdr->bpdu_type == 0x80) // TCN BPDUs
+		strcpy(pi->info, "Topology Change Notification");
+}
 
 /*
 int printStatistics(const struct pcap_pkthdr* header)
