@@ -1,8 +1,8 @@
 #include <time.h>
 #include <string.h>
 
-#include "../hdr/print.h"
-#include "../hdr/utils.h"
+#include "print.h"
+#include "utils.h"
 
 #define Broadcast "ff:ff:ff:ff:ff:ff"
 #define STP "01:80:c2:00:00:00"

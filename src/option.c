@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
-#include "../hdr/option.h"
+
+#include "option.h"
 
 int setLive(pcap_t** fp, char* arg, char* errbuf)
 {

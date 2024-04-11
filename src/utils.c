@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "../hdr/utils.h"
+#include "utils.h"
 
 void mactostr(char* buf, int buf_size, const mac_addr mac)
 {
