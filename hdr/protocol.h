@@ -2,13 +2,26 @@
 
 #include <pcap.h>
 
-/* IP Addresss Structure */
-typedef struct ip_addr {
+/* IPv4 Addresss Structure */
+typedef struct ipv4_addr {
 	u_char byte1;
 	u_char byte2;
 	u_char byte3;
 	u_char byte4;
-} ip_addr;
+} ipv4_addr;
+
+
+/* IPv6 Address Structure */
+typedef struct ipv6_addr {
+	u_short byte1;
+	u_short byte2;
+	u_short byte3;
+	u_short byte4;
+	u_short byte5;
+	u_short byte6;
+	u_short byte7;
+	u_short byte8;
+} ipv6_addr;
 
 
 /* MAC Addresss Structure */
@@ -65,7 +78,7 @@ typedef struct llc_stp_tcn_header {
 #pragma pack(pop)
 
 
-/* IP Header Structure */
+/* IPv4 Header Structure */
 typedef struct ipv4_header {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 	u_char hl:4;    /* Internet header length(4bits) */
@@ -82,9 +95,20 @@ typedef struct ipv4_header {
 	u_char ttl;     /* Time to live */
 	u_char p;       /* Protocol */
 	u_short sum;    /* Header Checksum */
-	ip_addr src;    /* Source address */
-	ip_addr dst;    /* Destination address */
+	ipv4_addr src;    /* Source address */
+	ipv4_addr dst;    /* Destination address */
 } ipv4_header;
+
+
+/* IPv6 Header Structure */
+typedef struct ipv6_header {
+	u_int v_cls_label;	/* Version(4bits), Traffic class, Flow label(20bits) */
+	u_short plen;		/* Payload length */
+	u_char nhdr;		/* Next header */
+	u_char hop_lim;		/* Hop limit */
+	ipv6_addr src; 		/* Source address */
+	ipv6_addr dst;		/* Destination address */
+} ipv6_header;
 
 
 /* ARP Structure */
@@ -95,9 +119,9 @@ typedef struct arp_header {
 	u_char plen;    /* Protocol address length */
 	u_short op;     /* Opcode */
 	mac_addr sha;   /* Source hardware address(mac address) */
-	ip_addr spa;    /* Source protocol address(ip address) */
+	ipv4_addr spa;    /* Source protocol address(ip address) */
 	mac_addr dha;   /* Destination hardware address(mac address) */
-	ip_addr dpa;    /* Destination protocol address(ip address) */
+	ipv4_addr dpa;    /* Destination protocol address(ip address) */
 } arp_header;
 
 

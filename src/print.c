@@ -35,6 +35,13 @@ const typemap ipv4_type_map[] = {
 	{ 89,	"OSPF" },
 };
 
+const typemap ipv6_type_map[] = {
+	{ 0,	"Hop-by-Hop Options for IPv6" },
+	{ 6,	"TCP" },
+	{ 17,	"UDP" },
+	{ 58,	"ICMPv6" },
+};
+
 const funcmap arp_func_map[] = {
 	//{ 0,	"Reserved" },
 	{ 1,	setARPReqInfo },
@@ -75,7 +82,7 @@ void setEtherInfo(print_info* pi, const u_char* pkt_data)
 
 	// set protocol
 	strcpy(pi->protocol, "NULL");
-	for (tm = ether_type_map; tm->val; ++tm)
+	for (tm = ether_type_map; tm->str; ++tm)
 		if (tm->val == ntohs(ether_hdr->type)) {
 			strcpy(pi->protocol, tm->str);
 			break;
@@ -98,6 +105,8 @@ void setEtherInfo(print_info* pi, const u_char* pkt_data)
 		setARPInfo(pi, pkt_data + sizeof(ether_header));
 	if (strcmp(pi->protocol, "STP") == 0)
 		setSTPInfo(pi, pkt_data + sizeof(ether_header));
+	if (strcmp(pi->protocol, "IPv6") == 0)
+		setIPv6Info(pi, pkt_data + sizeof(ether_header));
 }
 
 void setIPv4Info(print_info* pi, const u_char* pkt_data)
@@ -108,11 +117,11 @@ void setIPv4Info(print_info* pi, const u_char* pkt_data)
 
 	ipv4_header* ipv4_hdr = (ipv4_header*)pkt_data;
 
-	iptostr(src, sizeof(src), ipv4_hdr->src);
-	iptostr(dst, sizeof(dst), ipv4_hdr->dst);
+	ipv4tostr(src, sizeof(src), ipv4_hdr->src);
+	ipv4tostr(dst, sizeof(dst), ipv4_hdr->dst);
 
 	// set protocol
-	for (tm = ipv4_type_map; tm->val; ++tm)
+	for (tm = ipv4_type_map; tm->str; ++tm)
 		if (tm->val == ipv4_hdr->p) {
 			strcpy(pi->protocol, tm->str);
 			break;
@@ -129,7 +138,7 @@ void setARPInfo(print_info* pi, const u_char* pkt_data)
 
 	arp_header* arp_hdr = (arp_header*)pkt_data;
 
-	for (fm = arp_func_map; fm->val; ++fm)
+	for (fm = arp_func_map; fm->func; ++fm)
 		if (fm->val == ntohs(arp_hdr->op)) {
 			fm->func(pi, arp_hdr);
 			break;
@@ -141,8 +150,8 @@ void setARPReqInfo(print_info* pi, arp_header* arp_hdr)
 	char src[16];
 	char dst[16];
 
-	iptostr(src, sizeof(src), arp_hdr->spa);
-	iptostr(dst, sizeof(dst), arp_hdr->dpa);
+	ipv4tostr(src, sizeof(src), arp_hdr->spa);
+	ipv4tostr(dst, sizeof(dst), arp_hdr->dpa);
 
 	snprintf(pi->info, sizeof(pi->info), "Who has %s? Tell %s", dst, src);
 }
@@ -151,7 +160,7 @@ void setARPRepInfo(print_info* pi, arp_header* arp_hdr)
 {
 	char buf[16];
 
-	iptostr(buf, sizeof(buf), arp_hdr->spa);
+	ipv4tostr(buf, sizeof(buf), arp_hdr->spa);
 
 	snprintf(pi->info, sizeof(pi->info), "%s is at %s", buf, pi->src);
 }
@@ -176,6 +185,29 @@ void setSTPInfo(print_info* pi, const u_char* pkt_data)
 	}
 	else if (stp_hdr->bpdu_type == 0x80) // TCN BPDUs
 		strcpy(pi->info, "Topology Change Notification");
+}
+
+void setIPv6Info(print_info* pi, const u_char* pkt_data)
+{
+	const typemap* tm;
+	char src[40];
+	char dst[40];
+
+	ipv6_header* ipv6_hdr = (ipv6_header*)pkt_data;
+	
+	ipv6tostr(src, sizeof(src), ipv6_hdr->src);
+	ipv6tostr(dst, sizeof(dst), ipv6_hdr->dst);
+
+	// set protocol
+	for (tm = ipv6_type_map; tm->str; ++tm)
+		if (tm->val == ipv6_hdr->nhdr) {
+			strcpy(pi->protocol, tm->str);
+			break;
+		}
+
+	// set src, dst addr
+	strcpy(pi->src, src);
+	strcpy(pi->dst, dst);
 }
 
 /*

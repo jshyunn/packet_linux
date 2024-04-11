@@ -5,8 +5,8 @@
 typedef struct print_info {
     char time[16];
     char protocol[20];
-    char src[20];
-    char dst[20];
+    char src[40];
+    char dst[40];
     int len;
     char info[100];
 } print_info;
@@ -30,3 +30,4 @@ void setARPInfo(print_info*, const u_char*);
 void setARPReqInfo(print_info*, arp_header*);
 void setARPRepInfo(print_info*, arp_header*);
 void setSTPInfo(print_info*, const u_char*);
+void setIPv6Info(print_info*, const u_char*);
