@@ -7,6 +7,8 @@ typedef struct print_info {
     char protocol[20];
     char src[40];
     char dst[40];
+    int sport;
+    int dport;
     int len;
     char info[100];
 } print_info;
@@ -26,3 +28,5 @@ void setIPv6Info(print_info*, const u_char*);
 void setARPInfo(print_info*, const u_char*);
 void setSTPInfo(print_info*, const u_char*);
 void setNotSupportedInfo(print_info*, const u_char*);
+void setTCPInfo(print_info*, const u_char*);
+void setUDPInfo(print_info*, const u_char*);

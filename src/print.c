@@ -29,17 +29,53 @@ const typemap ether_type_map[] = {
 const typemap ipv4_type_map[] = {
 	{ 1,	"ICMP",	setNotSupportedInfo },
 	{ 2,	"IGMP",	setNotSupportedInfo },
-	{ 6,	"TCP",	setNotSupportedInfo },
+	{ 6,	"TCP",	setTCPInfo },
 	{ 8,	"EGP",	setNotSupportedInfo },
-	{ 17,	"UDP",	setNotSupportedInfo },
+	{ 17,	"UDP",	setUDPInfo },
 	{ 89,	"OSPF",	setNotSupportedInfo },
 };
 
 const typemap ipv6_type_map[] = {
 	{ 0,	"Hop-by-Hop Options for IPv6",	setNotSupportedInfo },
-	{ 6,	"TCP",							setNotSupportedInfo },
-	{ 17,	"UDP",							setNotSupportedInfo },
+	{ 6,	"TCP",							setTCPInfo },
+	{ 17,	"UDP",							setUDPInfo },
 	{ 58,	"ICMPv6",						setNotSupportedInfo },
+};
+
+const typemap tcp_type_map[] = {
+	{ 20,	"FTP",		setNotSupportedInfo },
+	{ 21,	"FTP",		setNotSupportedInfo },
+	{ 22,	"SSH",		setNotSupportedInfo },
+	{ 23,	"Telnet",	setNotSupportedInfo },
+	{ 25,	"SMTP",		setNotSupportedInfo },
+	{ 80,	"HTTP",		setNotSupportedInfo },
+	{ 109,	"POP2",		setNotSupportedInfo },
+	{ 110,	"POP3",		setNotSupportedInfo },
+	{ 111,	"RPC",		setNotSupportedInfo },
+	{ 119,	"NNTP",		setNotSupportedInfo },
+	{ 139,	"NetBIOS",	setNotSupportedInfo },
+	{ 143,	"IMAP4",	setNotSupportedInfo },
+	{ 179,	"BGP",		setNotSupportedInfo },
+	{ 194,	"IRC",		setNotSupportedInfo },
+	{ 220,	"IMAP3",	setNotSupportedInfo },
+	{ 389,	"LDAP",		setNotSupportedInfo },
+	{ 443,	"HTTPS",	setNotSupportedInfo },
+};
+
+const typemap udp_type_map[] = {
+	{ 0,	"Reserved",	setNotSupportedInfo },
+	{ 53,	"DNS",		setNotSupportedInfo },
+	{ 69,	"TFTP",		setNotSupportedInfo },
+	{ 80,	"HTTP",		setNotSupportedInfo },
+	{ 111,	"RPC",		setNotSupportedInfo },
+	{ 123,	"NTP",		setNotSupportedInfo },
+	{ 137,	"NBNS",		setNotSupportedInfo }, // NetBIOS Name Service
+	{ 138,	"BROWSER",	setNotSupportedInfo },
+	{ 161,	"SNMP",		setNotSupportedInfo },
+	{ 162,	"SNMP",		setNotSupportedInfo },
+	{ 546,	"DHCPv6",	setNotSupportedInfo },
+	{ 547,	"DHCPv6",	setNotSupportedInfo },
+	{ 1900,	"SSDP",		setNotSupportedInfo },
 };
 
 void print(print_info pi)
@@ -91,7 +127,7 @@ void setEtherInfo(print_info* pi, const u_char* pkt_data)
 	// set info
 	strcpy(pi->info, "");
 
-	if (strcmp(pi->protocol, "STP") == 0)
+	if (strcmp(pi->protocol, "STP") == 0) // 처리 함수 call하는 로직 수정 필요
 		setSTPInfo(pi, pkt_data + sizeof(ether_header));
 	else
 		tm->func(pi, pkt_data + sizeof(ether_header));
@@ -118,6 +154,8 @@ void setIPv4Info(print_info* pi, const u_char* pkt_data)
 	// set src, dst addr
 	strcpy(pi->src, src);
 	strcpy(pi->dst, dst);
+
+	tm->func(pi, pkt_data + sizeof(ipv4_header));
 }
 
 void setIPv6Info(print_info* pi, const u_char* pkt_data)
@@ -141,6 +179,8 @@ void setIPv6Info(print_info* pi, const u_char* pkt_data)
 	// set src, dst addr
 	strcpy(pi->src, src);
 	strcpy(pi->dst, dst);
+
+	tm->func(pi, pkt_data + sizeof(ipv6_header));
 }
 
 void setARPInfo(print_info* pi, const u_char* pkt_data)
@@ -199,9 +239,37 @@ void setSTPInfo(print_info* pi, const u_char* pkt_data)
 		strcpy(pi->info, "Topology Change Notification");
 }
 
+void setTCPInfo(print_info* pi, const u_char* pkt_data)
+{
+	const typemap* tm;
 
+	tcp_header* tcp_hdr = (tcp_header*)pkt_data;
 
+	for (tm = tcp_type_map; tm->str; ++tm)
+		if (tm->val == ntohs(tcp_hdr->dport)) {
+			strcpy(pi->protocol, tm->str);
+			break;
+		}
 
+	pi->sport = tcp_hdr->sport;
+	pi->dport = tcp_hdr->dport;
+}
+
+void setUDPInfo(print_info* pi, const u_char* pkt_data)
+{
+	const typemap* tm;
+
+	udp_header* udp_hdr = (udp_header*)pkt_data;
+	
+	for (tm = udp_type_map; tm->str; ++tm)
+		if (tm->val == ntohs(udp_hdr->dport)) {
+			strcpy(pi->protocol, tm->str);
+			break;
+		}
+
+	pi->sport = udp_hdr->sport;
+	pi->dport = udp_hdr->dport;
+}
 
 void setNotSupportedInfo(print_info* pi, const u_char* pkt_data)
 {
