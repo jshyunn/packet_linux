@@ -76,6 +76,7 @@ const typemap udp_type_map[] = {
 	{ 546,	"DHCPv6",	setNotSupportedInfo },
 	{ 547,	"DHCPv6",	setNotSupportedInfo },
 	{ 1900,	"SSDP",		setNotSupportedInfo },
+	{ 5353,	"MDNS",		setNotSupportedInfo }, // Multicast Domain Name System
 };
 
 void print(print_info pi)
