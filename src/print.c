@@ -8,38 +8,38 @@
 #define STP "01:80:c2:00:00:00"
 
 const typemap ether_type_map[] = {
-	{ 0x0600,	"Xerox XNS IDP" },
-	{ 0x0800,	"IPv4" },
-	{ 0x0805,	"X.25" },
-	{ 0x0806,	"ARP" },
-	{ 0x0835,	"RARP" },
-	{ 0x6003,	"DEC DECnet Phase IV" },
-	{ 0x8100,	"VLAN ID" },
-	{ 0x8137,	"Novell Netware IPX" },
-	{ 0x8191,	"NetBIOS" },
-	{ 0x86dd,	"IPv6" },
-	{ 0x8847,	"MPLS" },
-	{ 0x8863,	"PPPoE Discovery Stage" },
-	{ 0x8864,	"PPPoE PPP Session Stage" },
-	{ 0x888E,	"IEEE 802.1X" },
-	{ 0x88CC,	"LLDP" },
-	{ 0,		"NULL" },
+	{ 0x0600,	"Xerox XNS IDP",			setNotSupportedInfo },
+	{ 0x0800,	"IPv4",						setIPv4Info },
+	{ 0x0805,	"X.25",						setNotSupportedInfo },
+	{ 0x0806,	"ARP",						setARPInfo },
+	{ 0x0835,	"RARP",						setNotSupportedInfo },
+	{ 0x6003,	"DEC DECnet Phase IV",		setNotSupportedInfo },
+	{ 0x8100,	"VLAN ID",					setNotSupportedInfo },
+	{ 0x8137,	"Novell Netware IPX",		setNotSupportedInfo },
+	{ 0x8191,	"NetBIOS",					setNotSupportedInfo },
+	{ 0x86dd,	"IPv6",						setIPv6Info },
+	{ 0x8847,	"MPLS",						setNotSupportedInfo },
+	{ 0x8863,	"PPPoE Discovery Stage",	setNotSupportedInfo },
+	{ 0x8864,	"PPPoE PPP Session Stage",	setNotSupportedInfo },
+	{ 0x888E,	"IEEE 802.1X",				setNotSupportedInfo },
+	{ 0x88CC,	"LLDP",						setNotSupportedInfo },
+	{ 0,		"NULL",						setNotSupportedInfo },
 };
 
 const typemap ipv4_type_map[] = {
-	{ 1,	"ICMP" },
-	{ 2,	"IGMP" },
-	{ 6,	"TCP" },
-	{ 8,	"EGP" },
-	{ 17,	"UDP" },
-	{ 89,	"OSPF" },
+	{ 1,	"ICMP",	setNotSupportedInfo },
+	{ 2,	"IGMP",	setNotSupportedInfo },
+	{ 6,	"TCP",	setNotSupportedInfo },
+	{ 8,	"EGP",	setNotSupportedInfo },
+	{ 17,	"UDP",	setNotSupportedInfo },
+	{ 89,	"OSPF",	setNotSupportedInfo },
 };
 
 const typemap ipv6_type_map[] = {
-	{ 0,	"Hop-by-Hop Options for IPv6" },
-	{ 6,	"TCP" },
-	{ 17,	"UDP" },
-	{ 58,	"ICMPv6" },
+	{ 0,	"Hop-by-Hop Options for IPv6",	setNotSupportedInfo },
+	{ 6,	"TCP",							setNotSupportedInfo },
+	{ 17,	"UDP",							setNotSupportedInfo },
+	{ 58,	"ICMPv6",						setNotSupportedInfo },
 };
 
 void print(print_info pi)
@@ -91,14 +91,10 @@ void setEtherInfo(print_info* pi, const u_char* pkt_data)
 	// set info
 	strcpy(pi->info, "");
 
-	if (strcmp(pi->protocol, "IPv4") == 0)
-		setIPv4Info(pi, pkt_data + sizeof(ether_header));
-	if (strcmp(pi->protocol, "ARP") == 0)
-		setARPInfo(pi, pkt_data + sizeof(ether_header));
 	if (strcmp(pi->protocol, "STP") == 0)
 		setSTPInfo(pi, pkt_data + sizeof(ether_header));
-	if (strcmp(pi->protocol, "IPv6") == 0)
-		setIPv6Info(pi, pkt_data + sizeof(ether_header));
+	else
+		tm->func(pi, pkt_data + sizeof(ether_header));
 }
 
 void setIPv4Info(print_info* pi, const u_char* pkt_data)
@@ -185,7 +181,7 @@ void setSTPInfo(print_info* pi, const u_char* pkt_data)
 {
 	llc_stp_tcn_header* stp_hdr = (llc_stp_tcn_header*)pkt_data;
 
-	if (stp_hdr->bpdu_type == 0x00) {// Configuration BPDUs
+	if (stp_hdr->bpdu_type == 0x00) { // Configuration BPDUs
 		char root_id_buf[18];
 		char root_id[30];
 		
@@ -201,6 +197,15 @@ void setSTPInfo(print_info* pi, const u_char* pkt_data)
 	}
 	else if (stp_hdr->bpdu_type == 0x80) // TCN BPDUs
 		strcpy(pi->info, "Topology Change Notification");
+}
+
+
+
+
+
+void setNotSupportedInfo(print_info* pi, const u_char* pkt_data)
+{
+	
 }
 
 /*

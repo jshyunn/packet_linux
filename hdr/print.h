@@ -12,14 +12,10 @@ typedef struct print_info {
 } print_info;
 
 typedef struct typemap {
-	u_int val;
+	const u_int val;
 	const char* str;
+    void (*const func)(print_info*, const u_char*);
 } typemap;
-
-typedef struct funcmap {
-    u_int val;
-    void (*func)(print_info*, arp_header*);
-} funcmap;
 
 void print(print_info);
 
@@ -29,3 +25,4 @@ void setIPv4Info(print_info*, const u_char*);
 void setIPv6Info(print_info*, const u_char*);
 void setARPInfo(print_info*, const u_char*);
 void setSTPInfo(print_info*, const u_char*);
+void setNotSupportedInfo(print_info*, const u_char*);
