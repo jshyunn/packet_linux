@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include "hdr/print.h"
-#include "hdr/option.h"
+#include "print.h"
+#include "option.h"
 
 #define SHORTOPT "lr:w:sv"
 
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 
 	int opt;
 	option u_opt;
-	char* mode_arg;
+	char *read_file, *write_file;
 	
 	memset(&u_opt, 0, sizeof(u_opt));
 
@@ -47,12 +47,13 @@ int main(int argc, char* argv[])
 			{
 				++u_opt.rflag;
 				u_opt.setMode = setOffline;
-				mode_arg = optarg;
+				read_file = optarg;
 				break;
 			}
 			case 'w':
 			{
 				++u_opt.wflag;
+				write_file = optarg;
 				break;
 			}
 			case 'v':
@@ -78,12 +79,20 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
-	pcap_t* fp;
+	pcap_t* pcap_fp;
+	pcap_dumper_t* pcap_dfp = NULL;
 	char errbuf[PCAP_ERRBUF_SIZE];
 
-	if (u_opt.setMode(&fp, mode_arg, errbuf) == -1) {
+	if (u_opt.setMode(&pcap_fp, read_file, errbuf) == -1) {
 		fprintf(stderr, "Error: %s\n", errbuf);
 		exit(1);
+	}
+
+	if (u_opt.wflag) {
+		if ((pcap_dfp = pcap_dump_open(pcap_fp, write_file)) == NULL) {
+			fprintf(stderr, "Error: %s\n", pcap_geterr(pcap_fp));
+			exit(1);
+		}
 	}
 
 	int res;
@@ -91,19 +100,22 @@ int main(int argc, char* argv[])
 	const u_char* pkt_data;
 	print_info pi;
 
-	while ((res = pcap_next_ex(fp, &pkt_hdr, &pkt_data)) >= 0) {
+	while ((res = pcap_next_ex(pcap_fp, &pkt_hdr, &pkt_data)) >= 0) {
 		if (res == 0) continue;
 		if (pkt_hdr->len < 14) continue;
 		
 		setPrintInfo(&pi, pkt_hdr, pkt_data);
-		print(pi);	
+		print(pi);
+
+		if (pcap_dfp)
+			pcap_dump((u_char*)pcap_dfp, pkt_hdr, pkt_data);
 	}
 	
 	if (res == -1) {
-		fprintf(stderr, "Error: %s\n", pcap_geterr(fp));
+		fprintf(stderr, "Error: %s\n", pcap_geterr(pcap_fp));
 		exit(1);
 	}
 
-	pcap_close(fp);
+	pcap_close(pcap_fp);
 	exit(0);
 }
