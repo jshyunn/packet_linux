@@ -22,16 +22,22 @@ void printUsage(char* filename)
 
 int main(int argc, char* argv[])
 {
+	int opt, status;
+	option u_opt;
+	char *read_file, *write_file;
+	pcap_t* pcap_fp;
+	pcap_dumper_t* pcap_dfp = NULL;
+	char errbuf[PCAP_ERRBUF_SIZE];
+	struct pcap_pkthdr* pkt_hdr;
+	const u_char* pkt_data;
+	print_info pi;
+
 	if (argc < 2) 
 	{
 		printUsage(argv[0]);
 		exit(1);
 	}
 
-	int opt;
-	option u_opt;
-	char *read_file, *write_file;
-	
 	memset(&u_opt, 0, sizeof(u_opt));
 
 	while ((opt = getopt(argc, argv, SHORTOPT)) != -1) {
@@ -79,10 +85,6 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
-	pcap_t* pcap_fp;
-	pcap_dumper_t* pcap_dfp = NULL;
-	char errbuf[PCAP_ERRBUF_SIZE];
-
 	if (u_opt.setMode(&pcap_fp, read_file, errbuf) == -1) {
 		fprintf(stderr, "Error: %s\n", errbuf);
 		exit(1);
@@ -95,23 +97,16 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	int res;
-	struct pcap_pkthdr* pkt_hdr;
-	const u_char* pkt_data;
-	print_info pi;
-
-	while ((res = pcap_next_ex(pcap_fp, &pkt_hdr, &pkt_data)) >= 0) {
-		if (res == 0) continue;
+	while ((status = pcap_next_ex(pcap_fp, &pkt_hdr, &pkt_data)) >= 0) {
+		if (status == 0) continue;
 		if (pkt_hdr->len < 14) continue;
+		if (pcap_dfp) pcap_dump((u_char*)pcap_dfp, pkt_hdr, pkt_data);
 		
 		setPrintInfo(&pi, pkt_hdr, pkt_data);
 		print(pi);
-
-		if (pcap_dfp)
-			pcap_dump((u_char*)pcap_dfp, pkt_hdr, pkt_data);
 	}
 	
-	if (res == -1) {
+	if (status == -1) {
 		fprintf(stderr, "Error: %s\n", pcap_geterr(pcap_fp));
 		exit(1);
 	}

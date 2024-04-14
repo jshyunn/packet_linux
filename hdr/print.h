@@ -27,6 +27,6 @@ void setIPv4Info(print_info*, const u_char*);
 void setIPv6Info(print_info*, const u_char*);
 void setARPInfo(print_info*, const u_char*);
 void setSTPInfo(print_info*, const u_char*);
-void setNotSupportedInfo(print_info*, const u_char*);
 void setTCPInfo(print_info*, const u_char*);
 void setUDPInfo(print_info*, const u_char*);
+void setNotSupportedInfo(print_info*, const u_char*);
